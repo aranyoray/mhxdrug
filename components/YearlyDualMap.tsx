@@ -23,6 +23,9 @@ export default function YearlyDualMap() {
   const [hoveredCounty, setHoveredCounty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [countyNames, setCountyNames] = useState<Record<string, string>>({})
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [searchResults, setSearchResults] = useState<Array<{fips: string, name: string}>>([])
+  const [fipsToName, setFipsToName] = useState<Record<string, string>>({})
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
@@ -52,10 +55,49 @@ export default function YearlyDualMap() {
         }
       })
       setCountyNames(names)
+      setFipsToName(names)
 
       setLoading(false)
     })
   }, [])
+
+  // Search functionality
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([])
+      return
+    }
+
+    const query = searchQuery.toLowerCase()
+    const results = Object.entries(fipsToName)
+      .filter(([_, name]) => name.toLowerCase().includes(query))
+      .map(([fips, name]) => ({ fips, name }))
+      .slice(0, 10)
+
+    setSearchResults(results)
+  }, [searchQuery, fipsToName])
+
+  const handleCountySelect = (fips: string) => {
+    // Highlight selected county on both maps
+    if (map1.current && map2.current) {
+      // Get county center from GeoJSON or use a default zoom
+      [map1.current, map2.current].forEach(map => {
+        map.flyTo({ zoom: 8, essential: true })
+      })
+    }
+
+    // Show county data
+    const countyData = yearlyData[selectedYear]?.[fips]
+    if (countyData) {
+      setHoveredCounty({
+        name: fipsToName[fips],
+        ...countyData
+      })
+    }
+
+    setSearchQuery('')
+    setSearchResults([])
+  }
 
   const getColorForValue = (value: number | null, isPolitic: boolean): string => {
     if (value === null) return '#e5e7eb'
@@ -135,6 +177,27 @@ export default function YearlyDualMap() {
             }
           })
 
+          // Add state borders
+          fetch('/data/us_states.geojson')
+            .then(r => r.json())
+            .then(statesGeoJSON => {
+              newMap.addSource('states', {
+                type: 'geojson',
+                data: statesGeoJSON
+              })
+
+              newMap.addLayer({
+                id: 'state-borders',
+                type: 'line',
+                source: 'states',
+                paint: {
+                  'line-color': '#000000',
+                  'line-width': 2.5,
+                  'line-opacity': 0.8
+                }
+              })
+            })
+
           // Initial color update
           const countyData = yearlyData[selectedYear]
           if (countyData) {
@@ -204,6 +267,33 @@ export default function YearlyDualMap() {
 
   return (
     <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="bg-white p-4 rounded-lg shadow">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search county by name (e.g., Los Angeles, Cook, Harris)..."
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          {searchResults.length > 0 && (
+            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {searchResults.map((result) => (
+                <div
+                  key={result.fips}
+                  onClick={() => handleCountySelect(result.fips)}
+                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                >
+                  <div className="font-semibold">{result.name} County</div>
+                  <div className="text-xs text-gray-500">FIPS: {result.fips}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Year Slider */}
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex items-center gap-4">
