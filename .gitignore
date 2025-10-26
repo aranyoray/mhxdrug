@@ -55,3 +55,4 @@ data/*.cpg
 outputs/*.mx
 outputs/*.geojson
 *.parquet
+.vercel

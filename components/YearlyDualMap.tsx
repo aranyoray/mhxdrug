@@ -6,7 +6,9 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 interface CountyData {
   fips: string
+  DrugDeaths: number | null
   DrugDeathRate: number | null
+  Is_Suppressed: boolean
   SuicideRate: number | null
   RepublicanMargin: number | null
   UnemploymentRate: number | null
@@ -408,11 +410,23 @@ export default function YearlyDualMap() {
           <h3 className="font-bold text-xl mb-3">{hoveredCounty.name} County ({selectedYear})</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div className="bg-red-50 p-3 rounded">
+              <span className="text-gray-600 text-xs block">Drug Deaths</span>
+              <div className="font-bold text-lg">
+                {hoveredCounty.Is_Suppressed
+                  ? '0 (Suppressed)'
+                  : hoveredCounty.DrugDeaths !== null
+                    ? hoveredCounty.DrugDeaths.toFixed(1)
+                    : 'No Data'}
+              </div>
+            </div>
+            <div className="bg-red-50 p-3 rounded">
               <span className="text-gray-600 text-xs block">Drug Death Rate</span>
               <div className="font-bold text-lg">
-                {hoveredCounty.DrugDeathRate !== null
-                  ? `${hoveredCounty.DrugDeathRate.toFixed(1)} per 100k`
-                  : 'N/A'}
+                {hoveredCounty.Is_Suppressed
+                  ? 'Suppressed'
+                  : hoveredCounty.DrugDeathRate !== null
+                    ? `${hoveredCounty.DrugDeathRate.toFixed(1)} per 100k`
+                    : 'No Data'}
               </div>
             </div>
             <div className="bg-purple-50 p-3 rounded">
