@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import CountyMap from '@/components/CountyMap'
 
 export default function Home() {
   const [summary, setSummary] = useState<any>(null)
@@ -87,6 +88,12 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* County Map Visualization */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">County-Level Data Visualization</h2>
+          <CountyMap />
         </div>
 
         {/* States Table */}
