@@ -2,7 +2,6 @@
 data/
 outputs/
 dashboard/
-dashboard_nextjs/
 *.csv
 *.parquet
 *.shp

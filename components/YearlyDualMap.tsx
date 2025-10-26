@@ -34,8 +34,20 @@ export default function YearlyDualMap() {
   // Load yearly county data
   useEffect(() => {
     Promise.all([
-      fetch('/data/yearly_county_data_complete.json').then(r => r.json()),
-      fetch('/data/us_counties.geojson').then(r => r.json())
+      fetch('/data/yearly_county_data_complete.json').then(r => {
+        if (!r.ok) throw new Error(`Failed to fetch yearly data: ${r.status}`)
+        return r.json()
+      }).catch(e => {
+        console.error('Error loading yearly_county_data_complete.json:', e)
+        return {}
+      }),
+      fetch('/data/us_counties.geojson').then(r => {
+        if (!r.ok) throw new Error(`Failed to fetch counties geojson: ${r.status}`)
+        return r.json()
+      }).catch(e => {
+        console.error('Error loading us_counties.geojson:', e)
+        return { features: [] }
+      })
     ]).then(([yearData, geojson]) => {
       // Convert to nested map structure
       const dataMap: Record<string, Record<string, CountyData>> = {}
@@ -60,6 +72,9 @@ export default function YearlyDualMap() {
       setFipsToName(names)
 
       setLoading(false)
+    }).catch(error => {
+      console.error('Critical error loading map data:', error)
+      setLoading(false) // CRITICAL: Prevent infinite loading
     })
   }, [])
 
@@ -153,7 +168,10 @@ export default function YearlyDualMap() {
 
     newMap.on('load', () => {
       fetch('/data/us_counties.geojson')
-        .then(r => r.json())
+        .then(r => {
+          if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`)
+          return r.json()
+        })
         .then(geojson => {
           newMap.addSource('counties', {
             type: 'geojson',
@@ -182,7 +200,10 @@ export default function YearlyDualMap() {
 
           // Add state borders
           fetch('/data/us_states.geojson')
-            .then(r => r.json())
+            .then(r => {
+              if (!r.ok) throw new Error(`Failed to fetch states: ${r.status}`)
+              return r.json()
+            })
             .then(statesGeoJSON => {
               newMap.addSource('states', {
                 type: 'geojson',
@@ -199,6 +220,9 @@ export default function YearlyDualMap() {
                   'line-opacity': 0.8
                 }
               })
+            })
+            .catch(error => {
+              console.error('Error loading state borders:', error)
             })
 
           // Initial color update
@@ -229,6 +253,9 @@ export default function YearlyDualMap() {
             setHoveredCounty(null)
             newMap.getCanvas().style.cursor = ''
           })
+        })
+        .catch(error => {
+          console.error('Error loading county geojson:', error)
         })
     })
 
