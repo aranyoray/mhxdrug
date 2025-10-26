@@ -32,7 +32,7 @@ export default function YearlyDualMap() {
   // Load yearly county data
   useEffect(() => {
     Promise.all([
-      fetch('/data/yearly_county_data.json').then(r => r.json()),
+      fetch('/data/yearly_county_data_complete.json').then(r => r.json()),
       fetch('/data/us_counties.geojson').then(r => r.json())
     ]).then(([yearData, geojson]) => {
       // Convert to nested map structure
@@ -100,7 +100,8 @@ export default function YearlyDualMap() {
   }
 
   const getColorForValue = (value: number | null, isPolitic: boolean): string => {
-    if (value === null) return '#e5e7eb'
+    // Show gray for NA/missing data
+    if (value === null || value === undefined) return '#d1d5db'
 
     if (isPolitic) {
       if (value > 40) return '#7f1d1d'
@@ -343,6 +344,10 @@ export default function YearlyDualMap() {
               <div className="w-6 h-4" style={{backgroundColor: '#7f1d1d'}}></div>
               <span className="text-sm">&gt;40</span>
             </div>
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-4" style={{backgroundColor: '#d1d5db'}}></div>
+              <span className="text-sm">No Data</span>
+            </div>
           </div>
         </div>
 
@@ -372,6 +377,10 @@ export default function YearlyDualMap() {
             <div className="flex items-center gap-1">
               <div className="w-6 h-4" style={{backgroundColor: '#7f1d1d'}}></div>
               <span className="text-sm">R+40</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-6 h-4" style={{backgroundColor: '#d1d5db'}}></div>
+              <span className="text-sm">No Data</span>
             </div>
           </div>
         </div>
