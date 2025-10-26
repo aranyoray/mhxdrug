@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import DualCountyMap from '@/components/DualCountyMap'
+import YearlyDualMap from '@/components/YearlyDualMap'
 
 export default function Home() {
   const [summary, setSummary] = useState<any>(null)
@@ -92,9 +92,9 @@ export default function Home() {
 
         {/* County Map Visualization */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Interactive County Maps - Side by Side</h2>
-          <p className="text-gray-600 mb-4">Hover over any county to see detailed statistics. Compare drug deaths and political lean across all US counties.</p>
-          <DualCountyMap />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Interactive County Maps - Year-by-Year Analysis</h2>
+          <p className="text-gray-600 mb-4">Use the slider to explore data from 2018-2023. Hover over any county to see comparable metrics. All 3,300+ US counties displayed.</p>
+          <YearlyDualMap />
         </div>
 
         {/* States Table */}
