@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import CountyMapGL from '@/components/CountyMapGL'
+import DualCountyMap from '@/components/DualCountyMap'
 
 export default function Home() {
   const [summary, setSummary] = useState<any>(null)
@@ -92,9 +92,9 @@ export default function Home() {
 
         {/* County Map Visualization */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Interactive County Map</h2>
-          <p className="text-gray-600 mb-4">Hover over counties to see detailed statistics</p>
-          <CountyMapGL />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Interactive County Maps - Side by Side</h2>
+          <p className="text-gray-600 mb-4">Hover over any county to see detailed statistics. Compare drug deaths and political lean across all US counties.</p>
+          <DualCountyMap />
         </div>
 
         {/* States Table */}
