@@ -45,3 +45,13 @@ coverage/
 *.csv.gz
 *.zip
 *.tar.gz
+
+# Large data files
+data/*.shp
+data/*.shx
+data/*.dbf
+data/*.prj
+data/*.cpg
+outputs/*.mx
+outputs/*.geojson
+*.parquet
