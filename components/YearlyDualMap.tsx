@@ -233,7 +233,13 @@ export default function YearlyDualMap() {
       style: {
         version: 8,
         sources: {},
-        layers: []
+        layers: [{
+          id: 'background',
+          type: 'background',
+          paint: {
+            'background-color': '#f0f0f0'
+          }
+        }]
       },
       center: [-98.5, 39.8],
       zoom: 3.5
