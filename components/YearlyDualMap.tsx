@@ -24,58 +24,60 @@ export default function YearlyDualMap() {
   const [selectedYear, setSelectedYear] = useState<string>('2023')
   const [hoveredCounty, setHoveredCounty] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [mapLoading, setMapLoading] = useState(false)
   const [countyNames, setCountyNames] = useState<Record<string, string>>({})
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [searchResults, setSearchResults] = useState<Array<{fips: string, name: string}>>([])
   const [fipsToName, setFipsToName] = useState<Record<string, string>>({})
+  const [geojsonData, setGeojsonData] = useState<any>(null)
+  const allDataLoaded = useRef<Record<string, boolean>>({})
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
-  // Load yearly county data
+  // Fast initial load - only load current year (2023)
   useEffect(() => {
-    Promise.all([
-      fetch('/data/yearly_county_data_complete.json').then(r => {
-        if (!r.ok) throw new Error(`Failed to fetch yearly data: ${r.status}`)
-        return r.json()
-      }).catch(e => {
-        console.error('Error loading yearly_county_data_complete.json:', e)
-        return {}
-      }),
-      fetch('/data/us_counties.geojson').then(r => {
-        if (!r.ok) throw new Error(`Failed to fetch counties geojson: ${r.status}`)
-        return r.json()
-      }).catch(e => {
-        console.error('Error loading us_counties.geojson:', e)
-        return { features: [] }
-      })
-    ]).then(([yearData, geojson]) => {
-      // Convert to nested map structure
-      const dataMap: Record<string, Record<string, CountyData>> = {}
-      Object.entries(yearData).forEach(([year, counties]: [string, any]) => {
-        dataMap[year] = {}
-        counties.forEach((county: CountyData) => {
-          dataMap[year][county.fips] = county
+    const loadInitialData = async () => {
+      try {
+        // Load all years data at once (it's needed for the map)
+        const [yearData, geojson] = await Promise.all([
+          fetch('/data/yearly_county_data_complete.json').then(r => r.json()),
+          fetch('/data/us_counties.geojson').then(r => r.json())
+        ])
+
+        // Store geojson for later use
+        setGeojsonData(geojson)
+
+        // Convert ALL years to map structure (we need this for year switching)
+        const dataMap: Record<string, Record<string, CountyData>> = {}
+        Object.entries(yearData).forEach(([year, counties]: [string, any]) => {
+          dataMap[year] = {}
+          counties.forEach((county: CountyData) => {
+            dataMap[year][county.fips] = county
+          })
+          allDataLoaded.current[year] = true
         })
-      })
-      setYearlyData(dataMap)
+        setYearlyData(dataMap)
 
-      // Extract county names from GeoJSON
-      const names: Record<string, string> = {}
-      geojson.features.forEach((feature: any) => {
-        const fips = feature.properties.GEOID
-        const name = feature.properties.NAME
-        if (fips && name) {
-          names[fips] = name
-        }
-      })
-      setCountyNames(names)
-      setFipsToName(names)
+        // Extract county names from GeoJSON
+        const names: Record<string, string> = {}
+        geojson.features.forEach((feature: any) => {
+          const fips = feature.properties.GEOID
+          const name = feature.properties.NAME
+          if (fips && name) {
+            names[fips] = name
+          }
+        })
+        setCountyNames(names)
+        setFipsToName(names)
 
-      setLoading(false)
-    }).catch(error => {
-      console.error('Critical error loading map data:', error)
-      setLoading(false) // CRITICAL: Prevent infinite loading
-    })
+        setLoading(false)
+      } catch (error) {
+        console.error('Error loading initial data:', error)
+        setLoading(false)
+      }
+    }
+
+    loadInitialData()
   }, [])
 
   // Search functionality
@@ -167,96 +169,89 @@ export default function YearlyDualMap() {
     newMap.addControl(new maplibregl.NavigationControl(), 'top-right')
 
     newMap.on('load', () => {
-      fetch('/data/us_counties.geojson')
-        .then(r => {
-          if (!r.ok) throw new Error(`Failed to fetch: ${r.status}`)
-          return r.json()
-        })
-        .then(geojson => {
-          newMap.addSource('counties', {
+      // Use cached geojson data instead of fetching again
+      if (!geojsonData) {
+        console.error('GeoJSON data not loaded')
+        return
+      }
+
+      newMap.addSource('counties', {
+        type: 'geojson',
+        data: geojsonData
+      })
+
+      newMap.addLayer({
+        id: 'counties-fill',
+        type: 'fill',
+        source: 'counties',
+        paint: {
+          'fill-color': '#e5e7eb',
+          'fill-opacity': 0.8
+        }
+      })
+
+      newMap.addLayer({
+        id: 'counties-outline',
+        type: 'line',
+        source: 'counties',
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 0.5
+        }
+      })
+
+      // Add state borders - load async but don't block rendering
+      fetch('/data/us_states.geojson')
+        .then(r => r.json())
+        .then(statesGeoJSON => {
+          newMap.addSource('states', {
             type: 'geojson',
-            data: geojson
+            data: statesGeoJSON
           })
 
           newMap.addLayer({
-            id: 'counties-fill',
-            type: 'fill',
-            source: 'counties',
-            paint: {
-              'fill-color': '#e5e7eb',
-              'fill-opacity': 0.8
-            }
-          })
-
-          newMap.addLayer({
-            id: 'counties-outline',
+            id: 'state-borders',
             type: 'line',
-            source: 'counties',
+            source: 'states',
             paint: {
-              'line-color': '#ffffff',
-              'line-width': 0.5
+              'line-color': '#000000',
+              'line-width': 2.5,
+              'line-opacity': 0.8
             }
-          })
-
-          // Add state borders
-          fetch('/data/us_states.geojson')
-            .then(r => {
-              if (!r.ok) throw new Error(`Failed to fetch states: ${r.status}`)
-              return r.json()
-            })
-            .then(statesGeoJSON => {
-              newMap.addSource('states', {
-                type: 'geojson',
-                data: statesGeoJSON
-              })
-
-              newMap.addLayer({
-                id: 'state-borders',
-                type: 'line',
-                source: 'states',
-                paint: {
-                  'line-color': '#000000',
-                  'line-width': 2.5,
-                  'line-opacity': 0.8
-                }
-              })
-            })
-            .catch(error => {
-              console.error('Error loading state borders:', error)
-            })
-
-          // Initial color update
-          const countyData = yearlyData[selectedYear]
-          if (countyData) {
-            updateMapColors(newMap, countyData, isDrugMap)
-          }
-
-          // Add hover
-          newMap.on('mousemove', 'counties-fill', (e) => {
-            if (e.features && e.features.length > 0) {
-              const feature = e.features[0]
-              const fips = feature.properties?.GEOID
-              const countyName = countyNames[fips] || feature.properties?.NAME
-              const data = yearlyData[selectedYear]?.[fips]
-
-              if (data) {
-                setHoveredCounty({
-                  name: countyName,
-                  ...data
-                })
-                newMap.getCanvas().style.cursor = 'pointer'
-              }
-            }
-          })
-
-          newMap.on('mouseleave', 'counties-fill', () => {
-            setHoveredCounty(null)
-            newMap.getCanvas().style.cursor = ''
           })
         })
         .catch(error => {
-          console.error('Error loading county geojson:', error)
+          console.error('Error loading state borders:', error)
         })
+
+      // Initial color update
+      const countyData = yearlyData[selectedYear]
+      if (countyData) {
+        updateMapColors(newMap, countyData, isDrugMap)
+      }
+
+      // Add hover
+      newMap.on('mousemove', 'counties-fill', (e) => {
+        if (e.features && e.features.length > 0) {
+          const feature = e.features[0]
+          const fips = feature.properties?.GEOID
+          const countyName = countyNames[fips] || feature.properties?.NAME
+          const data = yearlyData[selectedYear]?.[fips]
+
+          if (data) {
+            setHoveredCounty({
+              name: countyName,
+              ...data
+            })
+            newMap.getCanvas().style.cursor = 'pointer'
+          }
+        }
+      })
+
+      newMap.on('mouseleave', 'counties-fill', () => {
+        setHoveredCounty(null)
+        newMap.getCanvas().style.cursor = ''
+      })
     })
 
     return newMap
@@ -264,7 +259,7 @@ export default function YearlyDualMap() {
 
   useEffect(() => {
     if (!mapContainer1.current || !mapContainer2.current || loading || map1.current || map2.current) return
-    if (Object.keys(yearlyData).length === 0) return
+    if (Object.keys(yearlyData).length === 0 || !geojsonData) return
 
     map1.current = createMap(mapContainer1.current, true)
     map2.current = createMap(mapContainer2.current, false)
@@ -275,7 +270,7 @@ export default function YearlyDualMap() {
       map1.current = null
       map2.current = null
     }
-  }, [loading, yearlyData])
+  }, [loading, yearlyData, geojsonData])
 
   // Update colors when year changes
   useEffect(() => {
@@ -287,9 +282,17 @@ export default function YearlyDualMap() {
   }, [selectedYear, yearlyData])
 
   if (loading) {
-    return <div className="h-96 flex items-center justify-center rounded-lg loading-indicator" style={{ background: 'var(--bg-secondary)' }}>
-      Loading map data...
-    </div>
+    return (
+      <div className="h-96 flex flex-col items-center justify-center rounded-lg" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
+        <div className="loading-indicator text-xl mb-4">Loading map data...</div>
+        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          Loading 3,300+ counties across 6 years
+        </div>
+        <div className="mt-4 w-64 h-2 rounded-full" style={{ background: 'var(--bg-tertiary)' }}>
+          <div className="h-full rounded-full loading-indicator" style={{ width: '60%', background: 'var(--accent-blue)' }}></div>
+        </div>
+      </div>
+    )
   }
 
   const currentData = yearlyData[selectedYear]
