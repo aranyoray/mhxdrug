@@ -362,7 +362,7 @@ export default function YearlyDualMap() {
           <div className="h-full rounded-full loading-indicator transition-all duration-300" style={{ width: `${progress}%`, background: 'var(--accent-blue)' }}></div>
         </div>
         <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-          Initial load: ~620 KB (was 3.6 MB) ⚡
+          Initial load: ~284 KB (was 1.5 MB, ~80% smaller!) ⚡
         </div>
       </div>
     )
@@ -424,7 +424,7 @@ export default function YearlyDualMap() {
         </div>
         {mapLoading && (
           <div className="text-xs mt-2 text-center animate-pulse" style={{ color: 'var(--accent-blue)' }}>
-            Loading {selectedYear} data (~610 KB)...
+            Loading {selectedYear} data (~80 KB)...
           </div>
         )}
       </div>

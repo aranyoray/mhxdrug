@@ -17,7 +17,10 @@
       "Bash(npm run build:*)",
       "Bash(cat:*)",
       "Bash(ogr2ogr:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git restore:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx:*)"
     ],
     "deny": [],
     "ask": []
