@@ -20,7 +20,8 @@
       "Bash(awk:*)",
       "Bash(git restore:*)",
       "Bash(git checkout:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(git remote:*)"
     ],
     "deny": [],
     "ask": []
