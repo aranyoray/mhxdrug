@@ -8,8 +8,14 @@ export default function AboutPage() {
       <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex-1">
-            <a href="/" className="text-sm md:text-base" style={{ color: 'var(--accent-blue)' }}>← Back to Dashboard</a>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mt-4 mb-2">About This Project</h1>
+            <a
+              href="/"
+              className="text-sm md:text-base inline-block mb-4 transition-all duration-200 hover:opacity-80"
+              style={{ color: 'var(--accent-blue)', textDecoration: 'none' }}
+            >
+              ← Back to Dashboard
+            </a>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">About This Project</h1>
           </div>
           <ThemeToggle />
         </div>

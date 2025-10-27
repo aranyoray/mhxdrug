@@ -273,10 +273,18 @@ export default function YearlyDualMap() {
 
     fillExpression.push('#e5e7eb')
 
-    // Set transition for smooth color changes
-    map.setPaintProperty('counties-fill', 'fill-color-transition', { duration: 300 })
+    // Use MapLibre's style specification for smooth transitions
+    const style = map.getStyle()
+    if (style && style.layers) {
+      const layerIndex = style.layers.findIndex((l: any) => l.id === 'counties-fill')
+      if (layerIndex >= 0) {
+        const layer = style.layers[layerIndex] as any
+        if (!layer.paint) layer.paint = {}
+        layer.paint['fill-color-transition'] = { duration: 300 }
+      }
+    }
     
-    // Update colors with smooth transition
+    // Update colors (transition applied automatically)
     map.setPaintProperty('counties-fill', 'fill-color', fillExpression as any)
   }
 

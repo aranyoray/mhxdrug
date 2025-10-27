@@ -54,11 +54,12 @@ export default function Home() {
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
-        <div className="text-center space-y-4">
-          <div className="loading-indicator text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Loading Dashboard...</div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Downloading data files</div>
-          <div className="w-64 h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
-            <div className="h-full loading-indicator" style={{ width: '70%', background: 'var(--accent-blue)' }}></div>
+        <div className="text-center space-y-4 px-4">
+          <div className="text-4xl mb-2">🇺🇸</div>
+          <div className="loading-indicator text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Loading NationVitals...</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Preparing county-level health data</div>
+          <div className="w-64 h-2 loading-bar">
+            <div className="h-full" style={{ width: '70%', background: 'linear-gradient(90deg, var(--accent-blue), var(--accent-cyan))' }}></div>
           </div>
           <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Optimized for faster loading ⚡</div>
         </div>
@@ -90,8 +91,17 @@ export default function Home() {
 
           {/* About Link - Centered Below */}
           <div className="flex justify-center mb-6">
-            <a href="/about" className="px-4 py-2 rounded-md text-sm md:text-base" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-              About This Project
+            <a
+              href="/about"
+              className="px-4 py-2 rounded-md text-sm md:text-base transition-all duration-200 hover:shadow-md"
+              style={{
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                textDecoration: 'none'
+              }}
+            >
+              📖 About This Project
             </a>
           </div>
         </div>
