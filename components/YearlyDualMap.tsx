@@ -83,13 +83,32 @@ export default function YearlyDualMap() {
 
       try {
         setLoadingProgress({ current: 1, total: 3, filename: 'counties.geojson' })
-        const geojsonResponse = await fetch('/data/us_counties.geojson', { signal: controller.signal })
 
-        if (!geojsonResponse.ok) {
-          throw new Error(`Failed to load GeoJSON: ${geojsonResponse.status}`)
+        // Try static file first, then API route as fallback
+        const geojsonUrls = ['/data/us_counties.geojson', '/api/geojson']
+        let geojson = null
+        let lastError = null
+
+        for (const url of geojsonUrls) {
+          try {
+            const geojsonResponse = await fetch(url, { signal: controller.signal })
+            if (geojsonResponse.ok) {
+              geojson = await geojsonResponse.json()
+              console.log(`✓ Loaded GeoJSON from ${url}`)
+              break
+            } else {
+              console.warn(`Failed to load GeoJSON from ${url}: ${geojsonResponse.status}`)
+            }
+          } catch (err) {
+            console.warn(`Error loading GeoJSON from ${url}:`, err)
+            lastError = err
+          }
         }
 
-        const geojson = await geojsonResponse.json()
+        if (!geojson) {
+          throw new Error(`Failed to load GeoJSON: ${lastError}`)
+        }
+
         setGeojsonData(geojson)
 
         setLoadingProgress({ current: 2, total: 3, filename: '2023 data' })

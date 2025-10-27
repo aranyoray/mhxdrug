@@ -4,10 +4,10 @@ import path from 'path'
 
 export async function GET(
   request: Request,
-  { params }: { params: { year: string } }
+  context: { params: Promise<{ year: string }> }
 ) {
   try {
-    const year = params.year
+    const { year } = await context.params
     const filePath = path.join(process.cwd(), 'public', 'data', 'years', `${year}.json`)
 
     if (!fs.existsSync(filePath)) {
