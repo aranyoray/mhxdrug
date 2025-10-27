@@ -431,10 +431,28 @@ export default function YearlyDualMap() {
       }
     }
 
-    if (!loading) {
+      if (!loading) {
       loadYearIfNeeded()
     }
   }, [selectedYear, loading])
+
+  // Prefetch all years for smooth transitions
+  useEffect(() => {
+    const prefetchAll = async () => {
+      for (const year of ['2018', '2019', '2020', '2021', '2022']) {
+        if (!yearlyData[year] && !allDataLoaded.current[year]) {
+          try {
+            const data = await loadYearData(year)
+            setYearlyData(prev => ({ ...prev, [year]: data }))
+            allDataLoaded.current[year] = true
+          } catch (err) {
+            console.error(`Prefetch ${year}:`, err)
+          }
+        }
+      }
+    }
+    if (!loading) prefetchAll()
+  }, [loading])
 
   if (loading) {
     const progress = loadingProgress.total > 0 ? (loadingProgress.current / loadingProgress.total) * 100 : 0
