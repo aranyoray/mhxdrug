@@ -32,6 +32,9 @@ export default function YearlyDualMap() {
   const [geojsonData, setGeojsonData] = useState<any>(null)
   const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0, filename: '' })
   const allDataLoaded = useRef<Record<string, boolean>>({})
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [selectedCountyA, setSelectedCountyA] = useState<string>('')
+  const [selectedCountyB, setSelectedCountyB] = useState<string>('')
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
@@ -628,6 +631,21 @@ export default function YearlyDualMap() {
         </div>
       </div>
 
+      {/* Compare Counties Button */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setCompareOpen(true)}
+          className="px-6 py-3 rounded-lg font-semibold text-base transition-all duration-200 hover:shadow-lg"
+          style={{
+            background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+            color: '#ffffff',
+            border: 'none'
+          }}
+        >
+          📊 Compare Counties
+        </button>
+      </div>
+
       {/* Hover Tooltip - Only Comparable Metrics */}
       {hoveredCounty && (
         <div className="county-tooltip" style={{ background: 'var(--bg-secondary)', border: `2px solid var(--accent-blue)` }}>
@@ -687,6 +705,174 @@ export default function YearlyDualMap() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Comparison Sidebar */}
+      {compareOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity"
+            onClick={() => setCompareOpen(false)}
+          />
+
+          {/* Sidebar Panel */}
+          <div
+            className="fixed top-0 right-0 h-full w-full md:w-[600px] z-50 shadow-2xl overflow-y-auto"
+            style={{
+              background: 'linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)',
+              animation: 'slideInRight 0.3s ease-out'
+            }}
+          >
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold" style={{ color: '#1e40af' }}>
+                  📊 Compare Counties
+                </h2>
+                <button
+                  onClick={() => setCompareOpen(false)}
+                  className="text-2xl font-bold px-3 py-1 rounded-lg transition-colors"
+                  style={{ color: '#64748b', background: 'rgba(255,255,255,0.5)' }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* County Selectors */}
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
+                    County A
+                  </label>
+                  <select
+                    value={selectedCountyA}
+                    onChange={(e) => setSelectedCountyA(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 transition-all"
+                    style={{
+                      background: 'white',
+                      borderColor: '#93c5fd',
+                      color: '#1e293b'
+                    }}
+                  >
+                    <option value="">Select a county...</option>
+                    {Object.entries(fipsToName)
+                      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+                      .map(([fips, name]) => (
+                        <option key={fips} value={fips}>
+                          {name} County (FIPS: {fips})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
+                    County B
+                  </label>
+                  <select
+                    value={selectedCountyB}
+                    onChange={(e) => setSelectedCountyB(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border-2 transition-all"
+                    style={{
+                      background: 'white',
+                      borderColor: '#93c5fd',
+                      color: '#1e293b'
+                    }}
+                  >
+                    <option value="">Select a county...</option>
+                    {Object.entries(fipsToName)
+                      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
+                      .map(([fips, name]) => (
+                        <option key={fips} value={fips}>
+                          {name} County (FIPS: {fips})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Comparison Results */}
+              {selectedCountyA && selectedCountyB && (
+                <div className="space-y-4">
+                  <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                    <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
+                      {fipsToName[selectedCountyA]} vs {fipsToName[selectedCountyB]}
+                    </h3>
+
+                    {/* Data Comparison Grid */}
+                    <div className="space-y-3">
+                      {['DrugDeaths', 'DrugDeathRate', 'SuicideRate', 'RepublicanMargin', 'UnemploymentRate', 'PovertyRate'].map((field) => {
+                        const dataA = yearlyData[selectedYear]?.[selectedCountyA]
+                        const dataB = yearlyData[selectedYear]?.[selectedCountyB]
+
+                        const labels: Record<string, string> = {
+                          DrugDeaths: 'Drug Deaths',
+                          DrugDeathRate: 'Drug Death Rate (per 100k)',
+                          SuicideRate: 'Suicide Rate (per 100k)',
+                          RepublicanMargin: 'Republican Margin (%)',
+                          UnemploymentRate: 'Unemployment Rate (%)',
+                          PovertyRate: 'Poverty Rate (%)'
+                        }
+
+                        const valueA = dataA?.[field as keyof CountyData]
+                        const valueB = dataB?.[field as keyof CountyData]
+
+                        return (
+                          <div key={field} className="rounded-lg p-4" style={{ background: 'white' }}>
+                            <div className="text-sm font-semibold mb-2" style={{ color: '#64748b' }}>
+                              {labels[field]}
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County A</div>
+                                <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
+                                  {valueA !== null && valueA !== undefined
+                                    ? typeof valueA === 'number'
+                                      ? valueA.toFixed(1)
+                                      : valueA
+                                    : 'N/A'}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County B</div>
+                                <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
+                                  {valueB !== null && valueB !== undefined
+                                    ? typeof valueB === 'number'
+                                      ? valueB.toFixed(1)
+                                      : valueB
+                                    : 'N/A'}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Summary */}
+                  <div className="rounded-xl p-5" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
+                    <h4 className="font-bold mb-2" style={{ color: '#1e40af' }}>📝 Quick Summary</h4>
+                    <p className="text-sm" style={{ color: '#475569' }}>
+                      Comparing {fipsToName[selectedCountyA]} and {fipsToName[selectedCountyB]} for {selectedYear}.
+                      All data from CDC WONDER, Census ACS, and MIT Election Lab.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {!selectedCountyA && !selectedCountyB && (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📍</div>
+                  <p className="text-lg" style={{ color: '#64748b' }}>
+                    Select two counties to compare
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   )
