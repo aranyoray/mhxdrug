@@ -35,32 +35,44 @@ export default function YearlyDualMap() {
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
-  // Load a specific year's data with timeout
+  // Load a specific year's data with timeout and fallback to API route
   const loadYearData = async (year: string): Promise<Record<string, CountyData>> => {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 30000) // 30 second timeout
 
-    try {
-      const response = await fetch(`/data/years/${year}.json`, { signal: controller.signal })
-      clearTimeout(timeout)
+    // Try static file first, then API route as fallback
+    const urls = [
+      `/data/years/${year}.json`,
+      `/api/years/${year}`
+    ]
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    for (const url of urls) {
+      try {
+        const response = await fetch(url, { signal: controller.signal })
+        clearTimeout(timeout)
+
+        if (!response.ok) {
+          console.warn(`Failed to load from ${url}: ${response.status}`)
+          continue
+        }
+
+        const counties = await response.json()
+
+        const dataMap: Record<string, CountyData> = {}
+        counties.forEach((county: CountyData) => {
+          dataMap[county.fips] = county
+        })
+
+        console.log(`✓ Loaded ${year} data from ${url}`)
+        return dataMap
+      } catch (error) {
+        console.warn(`Error loading from ${url}:`, error)
+        continue
       }
-
-      const counties = await response.json()
-
-      const dataMap: Record<string, CountyData> = {}
-      counties.forEach((county: CountyData) => {
-        dataMap[county.fips] = county
-      })
-
-      return dataMap
-    } catch (error) {
-      clearTimeout(timeout)
-      console.error(`Failed to load year ${year}:`, error)
-      throw error
     }
+
+    clearTimeout(timeout)
+    throw new Error(`Failed to load year ${year} from all sources`)
   }
 
   // Fast initial load - only load current year (2023)
