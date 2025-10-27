@@ -21,7 +21,11 @@
       "Bash(git restore:*)",
       "Bash(git checkout:*)",
       "Bash(npx:*)",
-      "Bash(git remote:*)"
+      "Bash(git remote:*)",
+      "Bash(git ls-tree:*)",
+      "Read(//private/tmp/**)",
+      "Bash(jobs:*)",
+      "Bash(xargs kill:*)"
     ],
     "deny": [],
     "ask": []
