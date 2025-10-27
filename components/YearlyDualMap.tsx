@@ -287,7 +287,7 @@ export default function YearlyDualMap() {
   }, [selectedYear, yearlyData])
 
   if (loading) {
-    return <div className="h-96 flex items-center justify-center bg-gray-100 rounded-lg">
+    return <div className="h-96 flex items-center justify-center rounded-lg loading-indicator" style={{ background: 'var(--bg-secondary)' }}>
       Loading map data...
     </div>
   }
@@ -298,25 +298,25 @@ export default function YearlyDualMap() {
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="bg-white p-4 rounded-lg shadow">
+      <div className="search-container">
         <div className="relative">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search county by name (e.g., Los Angeles, Cook, Harris)..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="search-input"
           />
           {searchResults.length > 0 && (
-            <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="search-results">
               {searchResults.map((result) => (
                 <div
                   key={result.fips}
                   onClick={() => handleCountySelect(result.fips)}
-                  className="px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="search-result-item"
                 >
-                  <div className="font-semibold">{result.name} County</div>
-                  <div className="text-xs text-gray-500">FIPS: {result.fips}</div>
+                  <div className="font-semibold" style={{ color: 'var(--text-primary)' }}>{result.name} County</div>
+                  <div className="text-xs" style={{ color: 'var(--text-muted)' }}>FIPS: {result.fips}</div>
                 </div>
               ))}
             </div>
@@ -325,91 +325,91 @@ export default function YearlyDualMap() {
       </div>
 
       {/* Year Slider */}
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="year-slider-container">
         <div className="flex items-center gap-4">
-          <label className="font-semibold text-lg">Year:</label>
+          <label className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Year:</label>
           <input
             type="range"
             min="0"
             max={years.length - 1}
             value={years.indexOf(selectedYear)}
             onChange={(e) => setSelectedYear(years[parseInt(e.target.value)])}
-            className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            className="year-slider flex-1"
           />
-          <span className="text-2xl font-bold text-blue-600 min-w-[80px]">{selectedYear}</span>
+          <span className="text-2xl font-bold min-w-[80px]" style={{ color: 'var(--accent-blue)' }}>{selectedYear}</span>
         </div>
-        <div className="flex justify-between text-sm text-gray-500 mt-2 px-2">
+        <div className="flex justify-between text-sm mt-2 px-2" style={{ color: 'var(--text-muted)' }}>
           {years.map(year => (
             <span key={year}>{year}</span>
           ))}
         </div>
-        <div className="text-sm text-gray-600 mt-2 text-center">
+        <div className="text-sm mt-2 text-center" style={{ color: 'var(--text-secondary)' }}>
           Showing {totalCounties.toLocaleString()} counties
         </div>
       </div>
 
       {/* Legends */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h4 className="font-semibold mb-2">Drug Death Rate (per 100k)</h4>
+        <div className="legend-container">
+          <h4 className="legend-title">Drug Death Rate (per 100k)</h4>
           <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#22c55e'}}></div>
-              <span className="text-sm">&lt;10</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#22c55e'}}></div>
+              <span>&lt;10</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#facc15'}}></div>
-              <span className="text-sm">10-20</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#facc15'}}></div>
+              <span>10-20</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#f97316'}}></div>
-              <span className="text-sm">20-30</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#f97316'}}></div>
+              <span>20-30</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#dc2626'}}></div>
-              <span className="text-sm">30-40</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#dc2626'}}></div>
+              <span>30-40</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#7f1d1d'}}></div>
-              <span className="text-sm">&gt;40</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#7f1d1d'}}></div>
+              <span>&gt;40</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#d1d5db'}}></div>
-              <span className="text-sm">No Data</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#d1d5db'}}></div>
+              <span>No Data</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h4 className="font-semibold mb-2">Republican Margin (%)</h4>
+        <div className="legend-container">
+          <h4 className="legend-title">Republican Margin (%)</h4>
           <div className="flex gap-2 items-center flex-wrap">
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#1e3a8a'}}></div>
-              <span className="text-sm">D+40</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#1e3a8a'}}></div>
+              <span>D+40</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#2563eb'}}></div>
-              <span className="text-sm">D+20</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#2563eb'}}></div>
+              <span>D+20</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#93c5fd'}}></div>
-              <span className="text-sm">D+0</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#93c5fd'}}></div>
+              <span>D+0</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#fca5a5'}}></div>
-              <span className="text-sm">R+0</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#fca5a5'}}></div>
+              <span>R+0</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#dc2626'}}></div>
-              <span className="text-sm">R+20</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#dc2626'}}></div>
+              <span>R+20</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#7f1d1d'}}></div>
-              <span className="text-sm">R+40</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#7f1d1d'}}></div>
+              <span>R+40</span>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-6 h-4" style={{backgroundColor: '#d1d5db'}}></div>
-              <span className="text-sm">No Data</span>
+            <div className="legend-item">
+              <div className="legend-color" style={{backgroundColor: '#d1d5db'}}></div>
+              <span>No Data</span>
             </div>
           </div>
         </div>
@@ -418,27 +418,27 @@ export default function YearlyDualMap() {
       {/* Side by Side Maps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="relative">
-          <div className="absolute top-2 left-2 bg-white px-3 py-1 rounded shadow z-10 font-semibold">
+          <div className="absolute top-2 left-2 px-3 py-1 rounded shadow z-10 font-semibold" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
             Drug Death Rate ({selectedYear})
           </div>
-          <div ref={mapContainer1} className="h-[500px] rounded-lg shadow-lg" />
+          <div ref={mapContainer1} className="h-[500px] rounded-lg shadow-lg" style={{ border: '1px solid var(--border-color)' }} />
         </div>
         <div className="relative">
-          <div className="absolute top-2 left-2 bg-white px-3 py-1 rounded shadow z-10 font-semibold">
+          <div className="absolute top-2 left-2 px-3 py-1 rounded shadow z-10 font-semibold" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
             Political Lean ({selectedYear})
           </div>
-          <div ref={mapContainer2} className="h-[500px] rounded-lg shadow-lg" />
+          <div ref={mapContainer2} className="h-[500px] rounded-lg shadow-lg" style={{ border: '1px solid var(--border-color)' }} />
         </div>
       </div>
 
       {/* Hover Tooltip - Only Comparable Metrics */}
       {hoveredCounty && (
-        <div className="bg-white p-4 rounded-lg shadow-xl border-2 border-blue-500">
-          <h3 className="font-bold text-xl mb-3">{hoveredCounty.name} County ({selectedYear})</h3>
+        <div className="county-tooltip" style={{ background: 'var(--bg-secondary)', border: `2px solid var(--accent-blue)` }}>
+          <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--text-primary)' }}>{hoveredCounty.name} County ({selectedYear})</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-            <div className="bg-red-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Drug Deaths</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Drug Deaths</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.Is_Suppressed
                   ? '0 (Suppressed)'
                   : hoveredCounty.DrugDeaths !== null
@@ -446,9 +446,9 @@ export default function YearlyDualMap() {
                     : 'No Data'}
               </div>
             </div>
-            <div className="bg-red-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Drug Death Rate</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Drug Death Rate</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.Is_Suppressed
                   ? 'Suppressed'
                   : hoveredCounty.DrugDeathRate !== null
@@ -456,33 +456,33 @@ export default function YearlyDualMap() {
                     : 'No Data'}
               </div>
             </div>
-            <div className="bg-purple-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Suicide Rate</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Suicide Rate</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.SuicideRate !== null
                   ? `${hoveredCounty.SuicideRate.toFixed(1)} per 100k`
                   : 'N/A'}
               </div>
             </div>
-            <div className="bg-blue-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Political Lean</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Political Lean</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.RepublicanMargin !== null
                   ? `${hoveredCounty.RepublicanMargin > 0 ? 'R+' : 'D+'}${Math.abs(hoveredCounty.RepublicanMargin).toFixed(1)}%`
                   : 'N/A'}
               </div>
             </div>
-            <div className="bg-orange-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Unemployment Rate</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Unemployment Rate</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.UnemploymentRate !== null
                   ? `${hoveredCounty.UnemploymentRate.toFixed(1)}%`
                   : 'N/A'}
               </div>
             </div>
-            <div className="bg-yellow-50 p-3 rounded">
-              <span className="text-gray-600 text-xs block">Poverty Rate</span>
-              <div className="font-bold text-lg">
+            <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Poverty Rate</span>
+              <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.PovertyRate !== null
                   ? `${hoveredCounty.PovertyRate.toFixed(1)}%`
                   : 'N/A'}
