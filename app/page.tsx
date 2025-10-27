@@ -189,7 +189,8 @@ export default function Home() {
               </thead>
               <tbody>
                 {(() => {
-                  const validStates = stateData.slice(1).filter((s: any) => s.DrugDeaths)
+                  // Don't skip first row - it's already JSON data, not CSV with header
+                  const validStates = stateData.filter((s: any) => s.DrugDeaths && s.state_name)
                   const maxDrugDeaths = Math.max(...validStates.map((s: any) => s.DrugDeaths || 0))
                   const maxSuicideDeaths = Math.max(...validStates.map((s: any) => s.SuicideDeaths || 0))
 

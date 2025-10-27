@@ -183,12 +183,48 @@ export default function YearlyDualMap() {
   }, [searchQuery, fipsToName])
 
   const handleCountySelect = (fips: string) => {
-    // Highlight selected county on both maps
-    if (map1.current && map2.current) {
-      // Get county center from GeoJSON or use a default zoom
-      [map1.current, map2.current].forEach(map => {
-        map.flyTo({ zoom: 8, essential: true })
-      })
+    // Find the county feature in GeoJSON to get its center
+    if (geojsonData && map1.current && map2.current) {
+      const feature = geojsonData.features.find((f: any) => f.properties.GEOID === fips)
+
+      if (feature) {
+        // Calculate bounding box center
+        let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity
+
+        const processCoords = (coords: any) => {
+          if (typeof coords[0] === 'number') {
+            // It's a point [lng, lat]
+            minLng = Math.min(minLng, coords[0])
+            maxLng = Math.max(maxLng, coords[0])
+            minLat = Math.min(minLat, coords[1])
+            maxLat = Math.max(maxLat, coords[1])
+          } else {
+            // It's an array of coordinates
+            coords.forEach(processCoords)
+          }
+        }
+
+        processCoords(feature.geometry.coordinates)
+
+        const centerLng = (minLng + maxLng) / 2
+        const centerLat = (minLat + maxLat) / 2
+
+        // Fly both maps to the county
+        if (map1.current) {
+          map1.current.flyTo({
+            center: [centerLng, centerLat],
+            zoom: 8,
+            essential: true
+          })
+        }
+        if (map2.current) {
+          map2.current.flyTo({
+            center: [centerLng, centerLat],
+            zoom: 8,
+            essential: true
+          })
+        }
+      }
     }
 
     // Show county data
