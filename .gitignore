@@ -45,6 +45,7 @@ coverage/
 *.csv.gz
 *.zip
 *.tar.gz
+*.backup
 
 # Large data files
 data/*.shp
