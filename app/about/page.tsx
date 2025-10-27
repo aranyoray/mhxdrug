@@ -1,10 +1,17 @@
+'use client'
+
+import ThemeToggle from '@/components/ThemeToggle'
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen p-8" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
       <div className="max-w-5xl mx-auto space-y-8">
-        <div>
-          <a href="/" style={{ color: 'var(--accent-blue)' }}>← Back to Dashboard</a>
-          <h1 className="text-4xl font-bold mt-4 mb-2">About This Project</h1>
+        <div className="flex justify-between items-start">
+          <div>
+            <a href="/" style={{ color: 'var(--accent-blue)' }}>← Back to Dashboard</a>
+            <h1 className="text-4xl font-bold mt-4 mb-2">About This Project</h1>
+          </div>
+          <ThemeToggle />
         </div>
         
         <div className="panel">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import YearlyDualMap from '@/components/YearlyDualMap'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Home() {
   const [summary, setSummary] = useState<any>(null)
@@ -71,7 +72,7 @@ export default function Home() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-start mb-4">
-            <div>
+            <div className="flex-1">
               <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
                 US County Health Disparities Explorer
               </h1>
@@ -79,9 +80,12 @@ export default function Home() {
                 Interactive analysis of overdose, suicide, mental health & political patterns (2018-2023)
               </p>
             </div>
-            <a href="/about" className="px-4 py-2 rounded-md" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-              About This Project
-            </a>
+            <div className="flex gap-4 items-center">
+              <ThemeToggle />
+              <a href="/about" className="px-4 py-2 rounded-md whitespace-nowrap" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+                About This Project
+              </a>
+            </div>
           </div>
         </div>
 
