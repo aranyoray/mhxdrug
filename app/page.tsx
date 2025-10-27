@@ -52,14 +52,14 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center space-y-4">
-          <div className="loading-indicator text-2xl font-bold">Loading Dashboard...</div>
-          <div className="text-sm text-gray-600">Downloading data files</div>
-          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 loading-indicator" style={{ width: '70%' }}></div>
+          <div className="loading-indicator text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Loading Dashboard...</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Downloading data files</div>
+          <div className="w-64 h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
+            <div className="h-full loading-indicator" style={{ width: '70%', background: 'var(--accent-blue)' }}></div>
           </div>
-          <div className="text-xs text-gray-500">Optimized for faster loading ⚡</div>
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Optimized for faster loading ⚡</div>
         </div>
       </div>
     )

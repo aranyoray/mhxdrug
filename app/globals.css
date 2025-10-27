@@ -384,10 +384,12 @@ button, select, input[type="range"], input[type="checkbox"] {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   transition: all 0.2s ease;
+  color: var(--text-primary);
 }
 
 .emoji-legend-item:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--accent-blue);
+  background: var(--bg-tertiary);
 }
