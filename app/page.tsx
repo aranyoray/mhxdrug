@@ -70,12 +70,19 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-            Politics, Drug Deaths & Mental Health Dashboard
-          </h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Interactive county-level analysis (2018-2023)
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                US County Health Disparities Explorer
+              </h1>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                Interactive analysis of overdose, suicide, mental health & political patterns (2018-2023)
+              </p>
+            </div>
+            <a href="/about" className="px-4 py-2 rounded-md" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+              About This Project
+            </a>
+          </div>
         </div>
 
         {/* Key Findings */}
