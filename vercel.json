@@ -5,7 +5,7 @@
       "source": "/data/(.*\\.geojson)",
       "headers": [
         {
-          "key firmly": "Content-Type",
+          "key": "Content-Type",
           "value": "application/geo+json"
         },
         {
