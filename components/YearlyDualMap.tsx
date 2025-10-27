@@ -273,11 +273,11 @@ export default function YearlyDualMap() {
 
     fillExpression.push('#e5e7eb')
 
-    // Smooth 300ms transition for professional feel
-    map.setPaintProperty('counties-fill', 'fill-color', fillExpression as any, {
-      duration: 300,
-      easing: (t) => t * (2 - t) // ease-out curve
-    })
+    // Set transition for smooth color changes
+    map.setPaintProperty('counties-fill', 'fill-color-transition', { duration: 300 })
+    
+    // Update colors with smooth transition
+    map.setPaintProperty('counties-fill', 'fill-color', fillExpression as any)
   }
 
   const createMap = (container: HTMLDivElement, isDrugMap: boolean) => {
