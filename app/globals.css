@@ -499,3 +499,62 @@ button, select, input[type="range"], input[type="checkbox"] {
   transform: translate(-50%, -50%);
   font-weight: bold;
 }
+
+/* ========================================
+   MOBILE RESPONSIVE IMPROVEMENTS
+   ======================================== */
+
+/* Larger touch targets on mobile */
+@media (max-width: 768px) {
+  .toggle-switch,
+  .checkbox-item,
+  .search-result-item,
+  button,
+  a {
+    min-height: 44px; /* Apple's recommended touch target size */
+  }
+
+  /* Reduce padding on small screens */
+  .stat-card,
+  .panel {
+    padding: var(--space-4);
+  }
+
+  /* Make tables scrollable on mobile */
+  .data-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Smaller text on mobile */
+  .emoji-legend-item {
+    font-size: 0.75rem;
+    padding: var(--space-2);
+  }
+
+  /* Improve map controls on mobile */
+  .year-slider-container {
+    padding: var(--space-4);
+  }
+
+  /* Better spacing for mobile */
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .stat-card-value {
+    font-size: var(--text-2xl);
+  }
+
+  .panel-title {
+    font-size: var(--text-xl);
+  }
+
+  /* Stack emoji legend items vertically on very small screens */
+  .emoji-legend-item span:last-child {
+    font-size: 0.7rem;
+  }
+}

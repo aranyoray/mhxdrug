@@ -67,25 +67,32 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
-                US County Health Disparities Explorer
-              </h1>
-              <p style={{ color: 'var(--text-secondary)' }}>
-                Interactive analysis of overdose, suicide, mental health & political patterns (2018-2023)
-              </p>
-            </div>
-            <div className="flex gap-4 items-center">
-              <ThemeToggle />
-              <a href="/about" className="px-4 py-2 rounded-md whitespace-nowrap" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-                About This Project
-              </a>
-            </div>
+        <div className="mb-6 md:mb-8">
+          {/* Theme Toggle - Top Right on Mobile/Desktop */}
+          <div className="flex justify-end mb-4">
+            <ThemeToggle />
+          </div>
+
+          {/* Main Heading - Centered */}
+          <div className="text-center mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 flex items-center justify-center gap-2 md:gap-3 flex-wrap px-2" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-3xl sm:text-4xl md:text-5xl">❤️</span>
+              <span>NationVitals</span>
+              <span className="text-3xl sm:text-4xl md:text-5xl">🇺🇸</span>
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base px-4 max-w-3xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
+              Interactive analysis of overdose, suicide, mental health & political patterns (2018-2023)
+            </p>
+          </div>
+
+          {/* About Link - Centered Below */}
+          <div className="flex justify-center mb-6">
+            <a href="/about" className="px-4 py-2 rounded-md text-sm md:text-base" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
+              About This Project
+            </a>
           </div>
         </div>
 
@@ -140,16 +147,16 @@ export default function Home() {
         </div>
 
         {/* County Map Visualization */}
-        <div className="mb-8">
-          <h2 className="panel-title mb-4">Interactive County Maps - Year-by-Year Analysis</h2>
-          <p className="panel-subtitle mb-4">Use the slider to explore data from 2018-2023. Hover over any county to see comparable metrics. All 3,300+ US counties displayed.</p>
+        <div className="mb-6 md:mb-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>Interactive County Maps - Year-by-Year Analysis</h2>
+          <p className="text-sm md:text-base mb-4 px-2 text-center md:text-left" style={{ color: 'var(--text-secondary)' }}>Use the slider to explore data from 2018-2023. Hover/tap any county to see metrics. All 3,300+ US counties displayed.</p>
           <YearlyDualMap />
         </div>
 
         {/* Emoji Legend */}
-        <div className="emoji-legend mb-6">
-          <h3 className="text-lg font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>📊 Severity Scale (Language-Free)</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+        <div className="emoji-legend mb-6 mx-2 md:mx-0">
+          <h3 className="text-base md:text-lg font-semibold mb-3 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>📊 Severity Scale (Language-Free)</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3 text-xs md:text-sm">
             <div className="emoji-legend-item flex items-center gap-2">
               <span className="text-2xl">🟢</span>
               <span style={{ color: 'var(--text-primary)' }}>1-2: Very Low</span>
