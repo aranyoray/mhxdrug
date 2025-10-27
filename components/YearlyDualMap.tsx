@@ -30,33 +30,37 @@ export default function YearlyDualMap() {
   const [searchResults, setSearchResults] = useState<Array<{fips: string, name: string}>>([])
   const [fipsToName, setFipsToName] = useState<Record<string, string>>({})
   const [geojsonData, setGeojsonData] = useState<any>(null)
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0, filename: '' })
   const allDataLoaded = useRef<Record<string, boolean>>({})
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
+
+  // Load a specific year's data
+  const loadYearData = async (year: string): Promise<Record<string, CountyData>> => {
+    const response = await fetch(`/data/years/${year}.json`)
+    const counties = await response.json()
+    
+    const dataMap: Record<string, CountyData> = {}
+    counties.forEach((county: CountyData) => {
+      dataMap[county.fips] = county
+    })
+    
+    return dataMap
+  }
 
   // Fast initial load - only load current year (2023)
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        // Load all years data at once (it's needed for the map)
-        const [yearData, geojson] = await Promise.all([
-          fetch('/data/yearly_county_data_complete.json').then(r => r.json()),
-          fetch('/data/us_counties.geojson').then(r => r.json())
-        ])
-
-        // Store geojson for later use
+        setLoadingProgress({ current: 1, total: 3, filename: 'counties.geojson' })
+        const geojson = await fetch('/data/us_counties.geojson').then(r => r.json())
         setGeojsonData(geojson)
 
-        // Convert ALL years to map structure (we need this for year switching)
-        const dataMap: Record<string, Record<string, CountyData>> = {}
-        Object.entries(yearData).forEach(([year, counties]: [string, any]) => {
-          dataMap[year] = {}
-          counties.forEach((county: CountyData) => {
-            dataMap[year][county.fips] = county
-          })
-          allDataLoaded.current[year] = true
-        })
-        setYearlyData(dataMap)
+        setLoadingProgress({ current: 2, total: 3, filename: '2023 data' })
+        const year2023Data = await loadYearData('2023')
+        
+        setYearlyData({ '2023': year2023Data })
+        allDataLoaded.current['2023'] = true
 
         // Extract county names from GeoJSON
         const names: Record<string, string> = {}
@@ -70,6 +74,7 @@ export default function YearlyDualMap() {
         setCountyNames(names)
         setFipsToName(names)
 
+        setLoadingProgress({ current: 3, total: 3, filename: 'complete' })
         setLoading(false)
       } catch (error) {
         console.error('Error loading initial data:', error)
@@ -272,24 +277,55 @@ export default function YearlyDualMap() {
     }
   }, [loading, yearlyData, geojsonData])
 
-  // Update colors when year changes
+  // Lazy load year data when switching years
   useEffect(() => {
-    if (!map1.current || !map2.current || !yearlyData[selectedYear]) return
+    const loadYearIfNeeded = async () => {
+      // If year is already loaded, just update colors
+      if (yearlyData[selectedYear]) {
+        if (map1.current && map2.current) {
+          updateMapColors(map1.current, yearlyData[selectedYear], true)
+          updateMapColors(map2.current, yearlyData[selectedYear], false)
+        }
+        return
+      }
 
-    const countyData = yearlyData[selectedYear]
-    updateMapColors(map1.current, countyData, true)
-    updateMapColors(map2.current, countyData, false)
-  }, [selectedYear, yearlyData])
+      // Year not loaded yet, load it now
+      setMapLoading(true)
+      try {
+        const yearData = await loadYearData(selectedYear)
+        setYearlyData(prev => ({ ...prev, [selectedYear]: yearData }))
+        allDataLoaded.current[selectedYear] = true
+
+        // Update map colors after loading
+        if (map1.current && map2.current) {
+          updateMapColors(map1.current, yearData, true)
+          updateMapColors(map2.current, yearData, false)
+        }
+      } catch (error) {
+        console.error(`Error loading year ${selectedYear}:`, error)
+      } finally {
+        setMapLoading(false)
+      }
+    }
+
+    if (!loading) {
+      loadYearIfNeeded()
+    }
+  }, [selectedYear, loading])
 
   if (loading) {
+    const progress = loadingProgress.total > 0 ? (loadingProgress.current / loadingProgress.total) * 100 : 0
     return (
       <div className="h-96 flex flex-col items-center justify-center rounded-lg" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)' }}>
         <div className="loading-indicator text-xl mb-4">Loading map data...</div>
-        <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-          Loading 3,300+ counties across 6 years
+        <div className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+          Loading {loadingProgress.filename}... ({loadingProgress.current}/{loadingProgress.total})
         </div>
         <div className="mt-4 w-64 h-2 rounded-full" style={{ background: 'var(--bg-tertiary)' }}>
-          <div className="h-full rounded-full loading-indicator" style={{ width: '60%', background: 'var(--accent-blue)' }}></div>
+          <div className="h-full rounded-full loading-indicator transition-all duration-300" style={{ width: `${progress}%`, background: 'var(--accent-blue)' }}></div>
+        </div>
+        <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
+          Initial load: ~620 KB (was 3.6 MB) ⚡
         </div>
       </div>
     )
@@ -349,6 +385,11 @@ export default function YearlyDualMap() {
         <div className="text-sm mt-2 text-center" style={{ color: 'var(--text-secondary)' }}>
           Showing {totalCounties.toLocaleString()} counties
         </div>
+        {mapLoading && (
+          <div className="text-xs mt-2 text-center animate-pulse" style={{ color: 'var(--accent-blue)' }}>
+            Loading {selectedYear} data (~610 KB)...
+          </div>
+        )}
       </div>
 
       {/* Legends */}

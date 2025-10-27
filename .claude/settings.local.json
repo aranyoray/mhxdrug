@@ -12,7 +12,12 @@
       "Bash(git branch:*)",
       "Bash(git remote add:*)",
       "Bash(git push:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(ogr2ogr:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

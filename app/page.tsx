@@ -7,6 +7,8 @@ export default function Home() {
   const [summary, setSummary] = useState<any>(null)
   const [stateData, setStateData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadStartTime] = useState(Date.now())
+  const [loadTime, setLoadTime] = useState<number | null>(null)
 
   // Emoji ranking function (1-10 scale)
   const getEmojiRank = (value: number | null, maxValue: number): string => {
@@ -31,6 +33,8 @@ export default function Home() {
       fetch('/data/summary.json').then(r => r.json()),
       fetch('/data/state_summary.json').then(r => r.json())
     ]).then(([summaryData, stateData]) => {
+      const timeElapsed = ((Date.now() - loadStartTime) / 1000).toFixed(1)
+      setLoadTime(parseFloat(timeElapsed))
       setSummary(summaryData)
       setStateData(stateData)
       setLoading(false)
@@ -39,8 +43,15 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl loading-indicator">Loading...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center space-y-4">
+          <div className="loading-indicator text-2xl font-bold">Loading Dashboard...</div>
+          <div className="text-sm text-gray-600">Downloading data files</div>
+          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-full bg-blue-600 loading-indicator" style={{ width: '70%' }}></div>
+          </div>
+          <div className="text-xs text-gray-500">Optimized for faster loading ⚡</div>
+        </div>
       </div>
     )
   }
