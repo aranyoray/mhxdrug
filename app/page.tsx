@@ -29,15 +29,24 @@ export default function Home() {
   }
 
   useEffect(() => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
     Promise.all([
-      fetch('/data/summary.json').then(r => r.json()),
-      fetch('/data/state_summary.json').then(r => r.json())
+      fetch('/data/summary.json', { signal: controller.signal }).then(r => r.json()),
+      fetch('/data/state_summary.json', { signal: controller.signal }).then(r => r.json())
     ]).then(([summaryData, stateData]) => {
+      clearTimeout(timeout)
       const timeElapsed = ((Date.now() - loadStartTime) / 1000).toFixed(1)
       setLoadTime(parseFloat(timeElapsed))
       setSummary(summaryData)
       setStateData(stateData)
       setLoading(false)
+    }).catch(error => {
+      clearTimeout(timeout)
+      console.error('Failed to load dashboard data:', error)
+      setLoading(false)
+      // Show error but continue - dashboard will work with cached data
     })
   }, [])
 

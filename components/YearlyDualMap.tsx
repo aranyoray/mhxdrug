@@ -35,30 +35,56 @@ export default function YearlyDualMap() {
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
-  // Load a specific year's data
+  // Load a specific year's data with timeout
   const loadYearData = async (year: string): Promise<Record<string, CountyData>> => {
-    const response = await fetch(`/data/years/${year}.json`)
-    const counties = await response.json()
-    
-    const dataMap: Record<string, CountyData> = {}
-    counties.forEach((county: CountyData) => {
-      dataMap[county.fips] = county
-    })
-    
-    return dataMap
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+
+    try {
+      const response = await fetch(`/data/years/${year}.json`, { signal: controller.signal })
+      clearTimeout(timeout)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const counties = await response.json()
+
+      const dataMap: Record<string, CountyData> = {}
+      counties.forEach((county: CountyData) => {
+        dataMap[county.fips] = county
+      })
+
+      return dataMap
+    } catch (error) {
+      clearTimeout(timeout)
+      console.error(`Failed to load year ${year}:`, error)
+      throw error
+    }
   }
 
   // Fast initial load - only load current year (2023)
   useEffect(() => {
     const loadInitialData = async () => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 45000) // 45 second timeout for initial load
+
       try {
         setLoadingProgress({ current: 1, total: 3, filename: 'counties.geojson' })
-        const geojson = await fetch('/data/us_counties.geojson').then(r => r.json())
+        const geojsonResponse = await fetch('/data/us_counties.geojson', { signal: controller.signal })
+
+        if (!geojsonResponse.ok) {
+          throw new Error(`Failed to load GeoJSON: ${geojsonResponse.status}`)
+        }
+
+        const geojson = await geojsonResponse.json()
         setGeojsonData(geojson)
 
         setLoadingProgress({ current: 2, total: 3, filename: '2023 data' })
         const year2023Data = await loadYearData('2023')
-        
+
+        clearTimeout(timeout)
+
         setYearlyData({ '2023': year2023Data })
         allDataLoaded.current['2023'] = true
 
@@ -77,7 +103,18 @@ export default function YearlyDualMap() {
         setLoadingProgress({ current: 3, total: 3, filename: 'complete' })
         setLoading(false)
       } catch (error) {
+        clearTimeout(timeout)
         console.error('Error loading initial data:', error)
+
+        // Show user-friendly error message
+        if (error instanceof Error) {
+          if (error.name === 'AbortError') {
+            alert('Loading timed out. Please check your internet connection and refresh the page.')
+          } else {
+            alert(`Failed to load map data: ${error.message}. Please refresh the page.`)
+          }
+        }
+
         setLoading(false)
       }
     }
