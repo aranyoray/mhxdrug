@@ -91,22 +91,35 @@ export default function YearlyDualMap() {
 
         for (const url of geojsonUrls) {
           try {
+            console.log(`Trying to load GeoJSON from: ${url}`)
             const geojsonResponse = await fetch(url, { signal: controller.signal })
+            console.log(`Response status: ${geojsonResponse.status}`)
+
             if (geojsonResponse.ok) {
-              geojson = await geojsonResponse.json()
-              console.log(`✓ Loaded GeoJSON from ${url}`)
+              const data = await geojsonResponse.json()
+              if (data.error) {
+                console.error(`API returned error:`, data)
+                lastError = new Error(data.error + ': ' + (data.details || data.path || ''))
+                continue
+              }
+              geojson = data
+              console.log(`✓ Loaded GeoJSON from ${url} with ${geojson.features?.length || 0} features`)
               break
             } else {
-              console.warn(`Failed to load GeoJSON from ${url}: ${geojsonResponse.status}`)
+              const errorText = await geojsonResponse.text()
+              console.warn(`Failed to load GeoJSON from ${url}: ${geojsonResponse.status} - ${errorText}`)
+              lastError = new Error(`HTTP ${geojsonResponse.status}: ${errorText}`)
             }
           } catch (err) {
-            console.warn(`Error loading GeoJSON from ${url}:`, err)
-            lastError = err
+            console.error(`Error loading GeoJSON from ${url}:`, err)
+            lastError = err instanceof Error ? err : new Error(String(err))
           }
         }
 
         if (!geojson) {
-          throw new Error(`Failed to load GeoJSON: ${lastError}`)
+          const errorMsg = `Failed to load GeoJSON from all sources. Last error: ${lastError?.message || 'Unknown error'}`
+          console.error(errorMsg)
+          throw new Error(errorMsg)
         }
 
         setGeojsonData(geojson)

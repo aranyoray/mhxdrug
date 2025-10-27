@@ -1,5 +1,7 @@
 # Data and analysis files (not needed for deployment)
-data/
+# NOTE: public/data/ is REQUIRED for the app to work!
+# Only exclude the root data/ directory (analysis files)
+/data/
 outputs/
 dashboard/
 *.csv
