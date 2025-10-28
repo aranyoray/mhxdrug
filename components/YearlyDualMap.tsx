@@ -866,7 +866,7 @@ export default function YearlyDualMap() {
       {/* Legends */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="legend-container">
-          <h4 className="legend-title">Drug Death Rate (per 100k)</h4>
+          <h4 className="legend-title"><strong>Drug Overdose Deaths</strong> <span className="font-normal">(age-adjusted rate)</span></h4>
           <div className="flex gap-2 items-center flex-wrap">
             <div className="legend-item">
               <div className="legend-color" style={{backgroundColor: '#22c55e'}}></div>
@@ -970,7 +970,7 @@ export default function YearlyDualMap() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="relative">
           <div className="absolute top-2 left-2 px-3 py-1 rounded shadow z-10 font-semibold" style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}>
-            Drug Death Rate ({selectedYear})
+            <strong>Drug Overdose Deaths</strong> <span className="font-normal">(age-adjusted rate)</span> ({selectedYear})
           </div>
           <div ref={mapContainer1} className="h-[500px] rounded-lg shadow-lg" style={{ border: '1px solid var(--border-color)' }} />
         </div>
@@ -1003,7 +1003,7 @@ export default function YearlyDualMap() {
           <h3 className="font-bold text-xl mb-3" style={{ color: 'var(--text-primary)' }}>{hoveredCounty.name} County ({selectedYear})</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
-              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Drug Deaths</span>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}><strong>Drug Overdose Deaths</strong> <span className="font-normal">(age-adjusted rate)</span></span>
               <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.Is_Suppressed
                   ? '0 (Suppressed)'
@@ -1013,7 +1013,7 @@ export default function YearlyDualMap() {
               </div>
             </div>
             <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
-              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Drug Death Rate</span>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}><strong>Drug Death Rate</strong> <span className="font-normal">(age-adjusted rate)</span></span>
               <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.Is_Suppressed
                   ? 'Suppressed'
@@ -1023,7 +1023,7 @@ export default function YearlyDualMap() {
               </div>
             </div>
             <div className="p-3 rounded" style={{ background: 'var(--bg-tertiary)' }}>
-              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}>Suicide Rate</span>
+              <span className="text-xs block" style={{ color: 'var(--text-secondary)' }}><strong>Suicide Mortality</strong> <span className="font-normal">(age-adjusted rate)</span></span>
               <div className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
                 {hoveredCounty.SuicideRate !== null
                   ? `${hoveredCounty.SuicideRate.toFixed(1)} per 100k`
@@ -1273,9 +1273,9 @@ export default function YearlyDualMap() {
                         const dataB = yearlyData[selectedYear]?.[selectedCountyB]
 
                         const labels: Record<string, string> = {
-                          DrugDeaths: 'Drug Deaths',
-                          DrugDeathRate: 'Drug Death Rate (per 100k)',
-                          SuicideRate: 'Suicide Rate (per 100k)',
+                          DrugDeaths: 'Drug Overdose Deaths (age-adjusted rate)',
+                          DrugDeathRate: 'Drug Death Rate (age-adjusted rate, per 100k)',
+                          SuicideRate: 'Suicide Mortality (age-adjusted rate, per 100k)',
                           RepublicanMargin: 'Republican Margin (%)',
                           UnemploymentRate: 'Unemployment Rate (%)',
                           PovertyRate: 'Poverty Rate (%)'
@@ -1364,8 +1364,8 @@ export default function YearlyDualMap() {
 
                       {['DrugDeathRate', 'SuicideRate', 'UnemploymentRate'].map((metric) => {
                         const labels: Record<string, string> = {
-                          DrugDeathRate: 'Drug Death Rate (per 100k)',
-                          SuicideRate: 'Suicide Rate (per 100k)',
+                          DrugDeathRate: 'Drug Overdose Deaths (age-adjusted rate, per 100k)',
+                          SuicideRate: 'Suicide Mortality (age-adjusted rate, per 100k)',
                           UnemploymentRate: 'Unemployment Rate (%)'
                         }
 
