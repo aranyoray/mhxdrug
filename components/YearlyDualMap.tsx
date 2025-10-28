@@ -35,6 +35,12 @@ export default function YearlyDualMap() {
   const [compareOpen, setCompareOpen] = useState(false)
   const [selectedCountyA, setSelectedCountyA] = useState<string>('')
   const [selectedCountyB, setSelectedCountyB] = useState<string>('')
+  const [searchQueryA, setSearchQueryA] = useState<string>('')
+  const [searchQueryB, setSearchQueryB] = useState<string>('')
+  const [searchResultsA, setSearchResultsA] = useState<Array<{fips: string, name: string, distance: number}>>([])
+  const [searchResultsB, setSearchResultsB] = useState<Array<{fips: string, name: string, distance: number}>>([])
+  const [showResultsA, setShowResultsA] = useState(false)
+  const [showResultsB, setShowResultsB] = useState(false)
   const [controlPoverty, setControlPoverty] = useState(false)
   const [controlIncome, setControlIncome] = useState(false)
   const [controlUrbanRural, setControlUrbanRural] = useState(false)
@@ -42,6 +48,66 @@ export default function YearlyDualMap() {
   const [loadingAdjustment, setLoadingAdjustment] = useState(false)
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
+
+  // Levenshtein distance for fuzzy matching
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const s1 = str1.toLowerCase()
+    const s2 = str2.toLowerCase()
+    const len1 = s1.length
+    const len2 = s2.length
+    const matrix: number[][] = []
+
+    for (let i = 0; i <= len1; i++) {
+      matrix[i] = [i]
+    }
+    for (let j = 0; j <= len2; j++) {
+      matrix[0][j] = j
+    }
+
+    for (let i = 1; i <= len1; i++) {
+      for (let j = 1; j <= len2; j++) {
+        const cost = s1[i - 1] === s2[j - 1] ? 0 : 1
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j] + 1,      // deletion
+          matrix[i][j - 1] + 1,      // insertion
+          matrix[i - 1][j - 1] + cost // substitution
+        )
+      }
+    }
+
+    return matrix[len1][len2]
+  }
+
+  // Search counties with fuzzy matching
+  const searchCounties = (query: string): Array<{fips: string, name: string, distance: number}> => {
+    if (!query || query.length < 2) return []
+
+    const results = Object.entries(fipsToName).map(([fips, name]) => ({
+      fips,
+      name,
+      distance: levenshteinDistance(query, name)
+    }))
+
+    // Sort by distance (closest matches first), then by name
+    return results
+      .sort((a, b) => {
+        if (a.distance !== b.distance) return a.distance - b.distance
+        return a.name.localeCompare(b.name)
+      })
+      .slice(0, 10) // Show top 10 matches
+  }
+
+  // Handle search for County A
+  useEffect(() => {
+    const results = searchCounties(searchQueryA)
+    setSearchResultsA(results)
+  }, [searchQueryA, fipsToName])
+
+  // Handle search for County B
+  useEffect(() => {
+    const results = searchCounties(searchQueryB)
+    setSearchResultsB(results)
+  }, [searchQueryB, fipsToName])
 
   // Load a specific year's data with timeout and fallback to API route
   const loadYearData = async (year: string): Promise<Record<string, CountyData>> => {
@@ -788,56 +854,112 @@ export default function YearlyDualMap() {
                 </button>
               </div>
 
-              {/* County Selectors */}
+              {/* County Search Bars */}
               <div className="space-y-4 mb-6">
-                <div>
+                {/* County A Search */}
+                <div className="relative">
                   <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
                     County A
                   </label>
-                  <select
-                    value={selectedCountyA}
-                    onChange={(e) => setSelectedCountyA(e.target.value)}
+                  <input
+                    type="text"
+                    value={searchQueryA}
+                    onChange={(e) => {
+                      setSearchQueryA(e.target.value)
+                      setShowResultsA(true)
+                    }}
+                    onFocus={() => setShowResultsA(true)}
+                    onBlur={() => setTimeout(() => setShowResultsA(false), 200)}
+                    placeholder="Search counties..."
                     className="w-full px-4 py-3 rounded-lg border-2 transition-all"
                     style={{
                       background: 'white',
                       borderColor: '#93c5fd',
                       color: '#1e293b'
                     }}
-                  >
-                    <option value="">Select a county...</option>
-                    {Object.entries(fipsToName)
-                      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
-                      .map(([fips, name]) => (
-                        <option key={fips} value={fips}>
-                          {name} County (FIPS: {fips})
-                        </option>
+                  />
+                  {showResultsA && searchResultsA.length > 0 && (
+                    <div
+                      className="absolute z-50 w-full mt-1 rounded-lg shadow-lg border-2 overflow-hidden"
+                      style={{
+                        background: 'white',
+                        borderColor: '#93c5fd',
+                        maxHeight: '300px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {searchResultsA.map((result) => (
+                        <div
+                          key={result.fips}
+                          onClick={() => {
+                            setSelectedCountyA(result.fips)
+                            setSearchQueryA(result.name)
+                            setShowResultsA(false)
+                          }}
+                          className="px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
+                          style={{ color: '#1e293b' }}
+                        >
+                          <div className="font-medium">{result.name}</div>
+                          <div className="text-xs" style={{ color: '#64748b' }}>
+                            FIPS: {result.fips} {result.distance > 0 && `(~${result.distance} chars diff)`}
+                          </div>
+                        </div>
                       ))}
-                  </select>
+                    </div>
+                  )}
                 </div>
 
-                <div>
+                {/* County B Search */}
+                <div className="relative">
                   <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
                     County B
                   </label>
-                  <select
-                    value={selectedCountyB}
-                    onChange={(e) => setSelectedCountyB(e.target.value)}
+                  <input
+                    type="text"
+                    value={searchQueryB}
+                    onChange={(e) => {
+                      setSearchQueryB(e.target.value)
+                      setShowResultsB(true)
+                    }}
+                    onFocus={() => setShowResultsB(true)}
+                    onBlur={() => setTimeout(() => setShowResultsB(false), 200)}
+                    placeholder="Search counties..."
                     className="w-full px-4 py-3 rounded-lg border-2 transition-all"
                     style={{
                       background: 'white',
                       borderColor: '#93c5fd',
                       color: '#1e293b'
                     }}
-                  >
-                    <option value="">Select a county...</option>
-                    {Object.entries(fipsToName)
-                      .sort(([, nameA], [, nameB]) => nameA.localeCompare(nameB))
-                      .map(([fips, name]) => (
-                        <option key={fips} value={fips}>
-                          {name} County (FIPS: {fips})
-                        </option>
+                  />
+                  {showResultsB && searchResultsB.length > 0 && (
+                    <div
+                      className="absolute z-50 w-full mt-1 rounded-lg shadow-lg border-2 overflow-hidden"
+                      style={{
+                        background: 'white',
+                        borderColor: '#93c5fd',
+                        maxHeight: '300px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {searchResultsB.map((result) => (
+                        <div
+                          key={result.fips}
+                          onClick={() => {
+                            setSelectedCountyB(result.fips)
+                            setSearchQueryB(result.name)
+                            setShowResultsB(false)
+                          }}
+                          className="px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
+                          style={{ color: '#1e293b' }}
+                        >
+                          <div className="font-medium">{result.name}</div>
+                          <div className="text-xs" style={{ color: '#64748b' }}>
+                            FIPS: {result.fips} {result.distance > 0 && `(~${result.distance} chars diff)`}
+                          </div>
+                        </div>
                       ))}
-                  </select>
+                    </div>
+                  )}
                 </div>
               </div>
 

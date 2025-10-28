@@ -10,6 +10,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [loadStartTime] = useState(Date.now())
   const [loadTime, setLoadTime] = useState<number | null>(null)
+  const [sortColumn, setSortColumn] = useState<string>('DrugDeaths')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   // Emoji ranking function (1-10 scale)
   const getEmojiRank = (value: number | null, maxValue: number): string => {
@@ -27,6 +29,47 @@ export default function Home() {
     if (normalized <= 8) return '🔴' // 8 - Very High
     if (normalized <= 9) return '🔴' // 9 - Critical
     return '🔴' // 10 - Extreme
+  }
+
+  // Handle column sorting
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('desc')
+    }
+  }
+
+  // Sort state data
+  const sortedStateData = (data: any[]) => {
+    return [...data].sort((a, b) => {
+      let aVal = a[sortColumn]
+      let bVal = b[sortColumn]
+
+      // Handle null/undefined values
+      if (aVal == null) return 1
+      if (bVal == null) return -1
+
+      // Special handling for state_name (string)
+      if (sortColumn === 'state_name') {
+        aVal = String(aVal).toLowerCase()
+        bVal = String(bVal).toLowerCase()
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal)
+      }
+
+      // Numeric comparison
+      const comparison = aVal - bVal
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }
+
+  // Render sort indicator
+  const SortIndicator = ({ column }: { column: string }) => {
+    if (sortColumn !== column) return <span className="text-xs opacity-30">▼</span>
+    return <span className="text-xs">{sortDirection === 'asc' ? '▲' : '▼'}</span>
   }
 
   useEffect(() => {
@@ -199,13 +242,53 @@ export default function Home() {
             <table className="min-w-full">
               <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>State</th>
+                  <th
+                    onClick={() => handleSort('state_name')}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      State <SortIndicator column="state_name" />
+                    </div>
+                  </th>
                   <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Drug Severity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Drug Deaths</th>
+                  <th
+                    onClick={() => handleSort('DrugDeaths')}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      Drug Deaths <SortIndicator column="DrugDeaths" />
+                    </div>
+                  </th>
                   <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Suicide Severity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Suicide Deaths</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Political Lean</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Counties</th>
+                  <th
+                    onClick={() => handleSort('SuicideDeaths')}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      Suicide Deaths <SortIndicator column="SuicideDeaths" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('RepublicanMargin')}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      Political Lean <SortIndicator column="RepublicanMargin" />
+                    </div>
+                  </th>
+                  <th
+                    onClick={() => handleSort('n_counties')}
+                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      Counties <SortIndicator column="n_counties" />
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -215,7 +298,7 @@ export default function Home() {
                   const maxDrugDeaths = Math.max(...validStates.map((s: any) => s.DrugDeaths || 0))
                   const maxSuicideDeaths = Math.max(...validStates.map((s: any) => s.SuicideDeaths || 0))
 
-                  return validStates.slice(0, 20).map((state: any, idx: number) => (
+                  return sortedStateData(validStates).map((state: any, idx: number) => (
                     <tr key={idx}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {state.state_name || state.state_fips}
