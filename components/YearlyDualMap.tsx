@@ -13,6 +13,8 @@ interface CountyData {
   RepublicanMargin: number | null
   UnemploymentRate: number | null
   PovertyRate: number | null
+  Population: number | null
+  urban_rural: string | null
 }
 
 export default function YearlyDualMap() {
