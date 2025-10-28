@@ -1364,55 +1364,179 @@ export default function YearlyDualMap() {
 
                       {['DrugDeathRate', 'SuicideRate', 'UnemploymentRate'].map((metric) => {
                         const labels: Record<string, string> = {
-                          DrugDeathRate: 'Drug Overdose Deaths (age-adjusted rate, per 100k)',
-                          SuicideRate: 'Suicide Mortality (age-adjusted rate, per 100k)',
-                          UnemploymentRate: 'Unemployment Rate (%)'
+                          DrugDeathRate: 'Overdose Mortality Trends (2018-2023)',
+                          SuicideRate: 'Suicide Mortality Trends (2018-2023)',
+                          UnemploymentRate: 'Unemployment Rate Trends (2018-2023)'
                         }
 
+                        // Prepare data for chart
+                        const dataA = years.map(year => {
+                          const val = timeSeriesData.countyA[year]?.[metric]
+                          return val !== null && val !== undefined ? val : null
+                        })
+                        const dataB = years.map(year => {
+                          const val = timeSeriesData.countyB[year]?.[metric]
+                          return val !== null && val !== undefined ? val : null
+                        })
+
+                        // Calculate min/max for Y axis
+                        const allValues = [...dataA, ...dataB].filter(v => v !== null) as number[]
+                        if (allValues.length === 0) return null
+
+                        const minVal = Math.min(...allValues)
+                        const maxVal = Math.max(...allValues)
+                        const padding = (maxVal - minVal) * 0.1 || 1
+                        const yMin = Math.max(0, minVal - padding)
+                        const yMax = maxVal + padding
+
+                        // Chart dimensions
+                        const width = 500
+                        const height = 200
+                        const marginLeft = 40
+                        const marginRight = 30
+                        const marginTop = 20
+                        const marginBottom = 40
+                        const chartWidth = width - marginLeft - marginRight
+                        const chartHeight = height - marginTop - marginBottom
+
+                        // Scale functions
+                        const xScale = (index: number) => marginLeft + (index / (years.length - 1)) * chartWidth
+                        const yScale = (value: number) => marginTop + chartHeight - ((value - yMin) / (yMax - yMin)) * chartHeight
+
+                        // Create path strings
+                        const createPath = (data: (number | null)[]) => {
+                          const points = data
+                            .map((val, i) => val !== null ? `${xScale(i)},${yScale(val)}` : null)
+                            .filter(p => p !== null)
+                          if (points.length === 0) return ''
+                          return 'M' + points.join(' L')
+                        }
+
+                        const pathA = createPath(dataA)
+                        const pathB = createPath(dataB)
+
                         return (
-                          <div key={metric} className="mb-6 last:mb-0">
-                            <div className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
+                          <div key={metric} className="mb-6 last:mb-0 p-4 rounded-lg" style={{ background: 'var(--bg-secondary)' }}>
+                            <div className="text-base font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                               {labels[metric]}
                             </div>
 
-                            <div className="space-y-2">
-                              {years.map((year) => {
-                                const valA = timeSeriesData.countyA[year]?.[metric]
-                                const valB = timeSeriesData.countyB[year]?.[metric]
-                                const isSuppressedA = timeSeriesData.countyA[year]?.Is_Suppressed
-                                const isSuppressedB = timeSeriesData.countyB[year]?.Is_Suppressed
+                            {/* Legend */}
+                            <div className="flex items-center justify-center gap-6 mb-3 text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-0.5" style={{ background: '#dc2626' }}></div>
+                                <span style={{ color: 'var(--text-secondary)' }}>{fipsToName[selectedCountyA]}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-0.5" style={{ background: '#3b82f6' }}></div>
+                                <span style={{ color: 'var(--text-secondary)' }}>{fipsToName[selectedCountyB]}</span>
+                              </div>
+                            </div>
 
-                                const displayA = isSuppressedA ? 'N/A' : valA !== null && valA !== undefined ? valA.toFixed(1) : 'N/A'
-                                const displayB = isSuppressedB ? 'N/A' : valB !== null && valB !== undefined ? valB.toFixed(1) : 'N/A'
-
+                            {/* Chart SVG */}
+                            <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} style={{ maxWidth: '100%' }}>
+                              {/* Grid lines */}
+                              {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                                const y = marginTop + chartHeight * ratio
                                 return (
-                                  <div key={year} className="flex items-center gap-3 text-xs">
-                                    <div className="w-12 font-medium" style={{ color: 'var(--text-muted)' }}>{year}</div>
-                                    <div className="flex-1 grid grid-cols-2 gap-2">
-                                      <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
-                                        <span style={{ color: 'var(--text-primary)' }}>{displayA}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }}></div>
-                                        <span style={{ color: 'var(--text-primary)' }}>{displayB}</span>
-                                      </div>
-                                    </div>
-                                  </div>
+                                  <line
+                                    key={ratio}
+                                    x1={marginLeft}
+                                    y1={y}
+                                    x2={marginLeft + chartWidth}
+                                    y2={y}
+                                    stroke="var(--border-color)"
+                                    strokeWidth="1"
+                                    opacity="0.3"
+                                  />
                                 )
                               })}
-                            </div>
 
-                            <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
-                                <span>{fipsToName[selectedCountyA]}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }}></div>
-                                <span>{fipsToName[selectedCountyB]}</span>
-                              </div>
-                            </div>
+                              {/* Y axis labels */}
+                              {[0, 0.5, 1].map((ratio) => {
+                                const value = yMin + (yMax - yMin) * (1 - ratio)
+                                const y = marginTop + chartHeight * ratio
+                                return (
+                                  <text
+                                    key={ratio}
+                                    x={marginLeft - 10}
+                                    y={y}
+                                    textAnchor="end"
+                                    dominantBaseline="middle"
+                                    fill="var(--text-secondary)"
+                                    fontSize="11"
+                                  >
+                                    {value.toFixed(0)}
+                                  </text>
+                                )
+                              })}
+
+                              {/* X axis labels */}
+                              {years.map((year, i) => (
+                                <text
+                                  key={year}
+                                  x={xScale(i)}
+                                  y={marginTop + chartHeight + 20}
+                                  textAnchor="middle"
+                                  fill="var(--text-secondary)"
+                                  fontSize="11"
+                                >
+                                  {year}
+                                </text>
+                              ))}
+
+                              {/* Data lines */}
+                              {pathA && (
+                                <path
+                                  d={pathA}
+                                  fill="none"
+                                  stroke="#dc2626"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              )}
+                              {pathB && (
+                                <path
+                                  d={pathB}
+                                  fill="none"
+                                  stroke="#3b82f6"
+                                  strokeWidth="2.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              )}
+
+                              {/* Data points */}
+                              {dataA.map((val, i) => {
+                                if (val === null) return null
+                                return (
+                                  <circle
+                                    key={`a-${i}`}
+                                    cx={xScale(i)}
+                                    cy={yScale(val)}
+                                    r="4"
+                                    fill="#dc2626"
+                                    stroke="var(--bg-secondary)"
+                                    strokeWidth="2"
+                                  />
+                                )
+                              })}
+                              {dataB.map((val, i) => {
+                                if (val === null) return null
+                                return (
+                                  <circle
+                                    key={`b-${i}`}
+                                    cx={xScale(i)}
+                                    cy={yScale(val)}
+                                    r="4"
+                                    fill="#3b82f6"
+                                    stroke="var(--bg-secondary)"
+                                    strokeWidth="2"
+                                  />
+                                )
+                              })}
+                            </svg>
                           </div>
                         )
                       })}
