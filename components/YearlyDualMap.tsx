@@ -46,6 +46,8 @@ export default function YearlyDualMap() {
   const [controlUrbanRural, setControlUrbanRural] = useState(false)
   const [adjustedData, setAdjustedData] = useState<any>(null)
   const [loadingAdjustment, setLoadingAdjustment] = useState(false)
+  const [timeSeriesData, setTimeSeriesData] = useState<any>(null)
+  const [loadingTimeSeries, setLoadingTimeSeries] = useState(false)
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 

@@ -7,16 +7,16 @@
    ======================================== */
 
 :root {
-  /* Dark Mode (Default) */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
+  /* Dark Mode (Default) - Full Black */
+  --bg-primary: #000000;
+  --bg-secondary: #111111;
+  --bg-tertiary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
   --accent-blue: #3b82f6;
   --accent-cyan: #06b6d4;
-  --border-color: #475569;
+  --border-color: #374151;
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -153,6 +153,10 @@
    BASE STYLES
    ======================================== */
 
+html {
+  background: var(--bg-primary);
+}
+
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -160,6 +164,8 @@ body {
   line-height: var(--leading-normal);
   position: relative;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* Ensure all text elements use theme colors */
