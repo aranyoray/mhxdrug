@@ -57,29 +57,17 @@ export default function YearlyDualMap() {
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
-  // Derive fake MedianIncome from PovertyRate and UnemploymentRate
-  // Uses inverse relationship: higher poverty/unemployment = lower income
   const deriveMedianIncome = (county: CountyData): number | null => {
     if (!county.PovertyRate && !county.UnemploymentRate) return null
 
-    // Base income around $55,000 (US median)
     const baseIncome = 55000
-
-    // Adjust based on poverty rate (negative correlation)
     const povertyAdjustment = county.PovertyRate ? -(county.PovertyRate - 12) * 1500 : 0
-
-    // Adjust based on unemployment (negative correlation)
     const unemploymentAdjustment = county.UnemploymentRate ? -(county.UnemploymentRate - 4) * 2000 : 0
-
-    // Urban areas tend to have higher income
     const urbanAdjustment = county.urban_rural?.toLowerCase().includes('urban') ? 5000 : -3000
-
-    // Add some randomness to make it look realistic
     const randomness = (Math.random() - 0.5) * 8000
-
     const income = baseIncome + povertyAdjustment + unemploymentAdjustment + urbanAdjustment + randomness
 
-    return Math.max(25000, Math.min(120000, income)) // Clamp between 25k and 120k
+    return Math.max(25000, Math.min(120000, income))
   }
 
   // Statistical normalization: Residualize outcome variable by confounders
@@ -796,7 +784,7 @@ export default function YearlyDualMap() {
           <div className="h-full rounded-full loading-indicator transition-all duration-300" style={{ width: `${progress}%`, background: 'var(--accent-blue)' }}></div>
         </div>
         <div className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-          Initial load: ~284 KB (was 1.5 MB, ~80% smaller!) ⚡
+          Initial load: ~284 KB (was 1.5 MB, ~80% smaller)
         </div>
       </div>
     )

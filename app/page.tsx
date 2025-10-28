@@ -132,7 +132,7 @@ export default function Home() {
           {/* Main Heading - Centered */}
           <div className="text-center mb-6">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 px-2" style={{ color: 'var(--text-primary)' }}>
-              🇺🇸📉 NationalVitals 📈❤️
+              NationalVitals
             </h1>
             <p className="text-xs sm:text-sm md:text-base px-4 max-w-3xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
               Interactive Analysis of Overdose, Suicide, Mental Health & Political Patterns (2010-2024)
@@ -365,7 +365,6 @@ export default function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Interstate Corridor Effect */}
                   <div className="text-center">
-                    <div className="text-4xl mb-2">🚨</div>
                     <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Interstate Corridor Effect</h4>
                     <div className="text-6xl font-bold mb-2 transition-transform hover:scale-110" style={{ color: 'var(--accent-blue)' }}>
                       +35%
@@ -377,7 +376,6 @@ export default function Home() {
 
                   {/* Time Trend */}
                   <div className="text-center">
-                    <div className="text-4xl mb-2">📈</div>
                     <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Time Trend</h4>
                     <div className="text-6xl font-bold mb-2 transition-transform hover:scale-110" style={{ color: 'var(--accent-blue)' }}>
                       +67%
@@ -389,7 +387,6 @@ export default function Home() {
 
                   {/* Political Correlation */}
                   <div className="text-center">
-                    <div className="text-4xl mb-2">🗳️</div>
                     <h4 className="font-bold text-lg mb-2" style={{ color: 'var(--text-primary)' }}>Political Correlation</h4>
                     <div className="text-4xl font-bold mb-2" style={{ color: 'var(--text-secondary)' }}>
                       Moderate
@@ -466,7 +463,7 @@ export default function Home() {
                   </table>
                 </div>
 
-                <h4 className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>📊 Plain-English Interpretation:</h4>
+                <h4 className="font-bold text-base mb-2" style={{ color: 'var(--text-primary)' }}>Interpretation:</h4>
                 <div className="space-y-3" style={{ color: 'var(--text-secondary)' }}>
                   <p>
                     <strong style={{ color: 'var(--text-primary)' }}>Interstate Effect:</strong> After accounting for poverty, income, demographics, and urban/rural status, counties located within 10km of major interstate highways have 35% higher overdose death rates. This supports the "trafficking corridor" hypothesis from prior literature.
@@ -529,7 +526,7 @@ export default function Home() {
                 <h4 className="font-bold text-lg mb-3" style={{ color: 'var(--text-primary)' }}>Limitations & Ethical Considerations</h4>
                 <div className="space-y-3 mb-6" style={{ color: 'var(--text-secondary)' }}>
                   <p>
-                    <strong style={{ color: 'var(--text-primary)' }}>⚠️ Ecological Inference Caveat:</strong> All analyses use county-level aggregate data. Associations observed at the county level do not necessarily apply to individuals (ecological fallacy).
+                    <strong style={{ color: 'var(--text-primary)' }}>Ecological Inference Caveat:</strong> All analyses use county-level aggregate data. Associations observed at the county level do not necessarily apply to individuals (ecological fallacy).
                   </p>
                   <p>
                     <strong style={{ color: 'var(--text-primary)' }}>Data Suppression:</strong> Counties with &lt;10 deaths in a year are suppressed to protect privacy, following CDC guidelines.
