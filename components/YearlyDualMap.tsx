@@ -35,6 +35,11 @@ export default function YearlyDualMap() {
   const [compareOpen, setCompareOpen] = useState(false)
   const [selectedCountyA, setSelectedCountyA] = useState<string>('')
   const [selectedCountyB, setSelectedCountyB] = useState<string>('')
+  const [controlPoverty, setControlPoverty] = useState(false)
+  const [controlIncome, setControlIncome] = useState(false)
+  const [controlUrbanRural, setControlUrbanRural] = useState(false)
+  const [adjustedData, setAdjustedData] = useState<any>(null)
+  const [loadingAdjustment, setLoadingAdjustment] = useState(false)
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
 
@@ -242,6 +247,50 @@ export default function YearlyDualMap() {
     setSearchQuery('')
     setSearchResults([])
   }
+
+  // Fetch adjusted comparison data when counties or controls change
+  useEffect(() => {
+    const fetchAdjustedData = async () => {
+      if (!selectedCountyA || !selectedCountyB) {
+        setAdjustedData(null)
+        return
+      }
+
+      // If no controls are enabled, skip API call
+      if (!controlPoverty && !controlIncome && !controlUrbanRural) {
+        setAdjustedData(null)
+        return
+      }
+
+      setLoadingAdjustment(true)
+      try {
+        const params = new URLSearchParams({
+          countyA: selectedCountyA,
+          countyB: selectedCountyB,
+          year: selectedYear,
+          controlPoverty: String(controlPoverty),
+          controlIncome: String(controlIncome),
+          controlUrbanRural: String(controlUrbanRural)
+        })
+
+        const response = await fetch(`/api/compare?${params}`)
+        if (response.ok) {
+          const data = await response.json()
+          setAdjustedData(data)
+        } else {
+          console.error('Failed to fetch adjusted data')
+          setAdjustedData(null)
+        }
+      } catch (error) {
+        console.error('Error fetching adjusted data:', error)
+        setAdjustedData(null)
+      } finally {
+        setLoadingAdjustment(false)
+      }
+    }
+
+    fetchAdjustedData()
+  }, [selectedCountyA, selectedCountyB, selectedYear, controlPoverty, controlIncome, controlUrbanRural])
 
   const getColorForValue = (value: number | null, isPolitic: boolean): string => {
     // Show gray for NA/missing data
@@ -792,6 +841,62 @@ export default function YearlyDualMap() {
                 </div>
               </div>
 
+              {/* Statistical Controls */}
+              {selectedCountyA && selectedCountyB && (
+                <div className="mb-6 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.5)' }}>
+                  <h4 className="text-sm font-bold mb-3" style={{ color: '#1e40af' }}>
+                    ⚙️ Adjust for Confounders
+                  </h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="checkbox-item"
+                        checked={controlPoverty}
+                        onChange={(e) => setControlPoverty(e.target.checked)}
+                      />
+                      <span className="text-sm" style={{ color: '#475569' }}>
+                        Control for Poverty Rate
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer opacity-50">
+                      <input
+                        type="checkbox"
+                        className="checkbox-item"
+                        checked={controlIncome}
+                        onChange={(e) => setControlIncome(e.target.checked)}
+                        disabled
+                      />
+                      <span className="text-sm" style={{ color: '#475569' }}>
+                        Control for Median Income (coming soon)
+                      </span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer opacity-50">
+                      <input
+                        type="checkbox"
+                        className="checkbox-item"
+                        checked={controlUrbanRural}
+                        onChange={(e) => setControlUrbanRural(e.target.checked)}
+                        disabled
+                      />
+                      <span className="text-sm" style={{ color: '#475569' }}>
+                        Control for Urban/Rural (coming soon)
+                      </span>
+                    </label>
+                  </div>
+                  {(controlPoverty || controlIncome || controlUrbanRural) && (
+                    <div className="mt-3 text-xs p-2 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#1e40af' }}>
+                      ℹ️ Statistical adjustment uses regression to remove the effect of selected confounders
+                    </div>
+                  )}
+                  {loadingAdjustment && (
+                    <div className="mt-2 text-xs text-center" style={{ color: '#3b82f6' }}>
+                      Computing adjusted values...
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Comparison Results */}
               {selectedCountyA && selectedCountyB && (
                 <div className="space-y-4">
@@ -818,33 +923,71 @@ export default function YearlyDualMap() {
                         const valueA = dataA?.[field as keyof CountyData]
                         const valueB = dataB?.[field as keyof CountyData]
 
+                        // Get adjusted values if available
+                        const adjustedInfo = adjustedData?.[field]
+                        const showAdjusted = adjustedInfo && adjustedInfo.adjusted_a !== null
+
                         return (
                           <div key={field} className="rounded-lg p-4" style={{ background: 'white' }}>
                             <div className="text-sm font-semibold mb-2" style={{ color: '#64748b' }}>
                               {labels[field]}
+                              {showAdjusted && (
+                                <span className="ml-2 text-xs px-2 py-1 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+                                  Adjusted
+                                </span>
+                              )}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
                                 <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County A</div>
                                 <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
-                                  {valueA !== null && valueA !== undefined
-                                    ? typeof valueA === 'number'
-                                      ? valueA.toFixed(1)
-                                      : valueA
-                                    : 'N/A'}
+                                  {showAdjusted ? (
+                                    <>
+                                      {adjustedInfo.adjusted_a.toFixed(1)}
+                                      <div className="text-xs font-normal mt-1" style={{ color: '#94a3b8' }}>
+                                        Raw: {adjustedInfo.raw_a.toFixed(1)}
+                                        {adjustedInfo.adjustment_pct_a && (
+                                          <span className="ml-1">({adjustedInfo.adjustment_pct_a.toFixed(0)}% adj)</span>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    valueA !== null && valueA !== undefined
+                                      ? typeof valueA === 'number'
+                                        ? valueA.toFixed(1)
+                                        : valueA
+                                      : 'N/A'
+                                  )}
                                 </div>
                               </div>
                               <div>
                                 <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County B</div>
                                 <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
-                                  {valueB !== null && valueB !== undefined
-                                    ? typeof valueB === 'number'
-                                      ? valueB.toFixed(1)
-                                      : valueB
-                                    : 'N/A'}
+                                  {showAdjusted ? (
+                                    <>
+                                      {adjustedInfo.adjusted_b.toFixed(1)}
+                                      <div className="text-xs font-normal mt-1" style={{ color: '#94a3b8' }}>
+                                        Raw: {adjustedInfo.raw_b.toFixed(1)}
+                                        {adjustedInfo.adjustment_pct_b && (
+                                          <span className="ml-1">({adjustedInfo.adjustment_pct_b.toFixed(0)}% adj)</span>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    valueB !== null && valueB !== undefined
+                                      ? typeof valueB === 'number'
+                                        ? valueB.toFixed(1)
+                                        : valueB
+                                      : 'N/A'
+                                  )}
                                 </div>
                               </div>
                             </div>
+                            {showAdjusted && adjustedInfo.adjustment_note && (
+                              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'rgba(249, 250, 251, 1)', color: '#64748b' }}>
+                                {adjustedInfo.adjustment_note} (n={adjustedInfo.n_counties} counties)
+                              </div>
+                            )}
                           </div>
                         )
                       })}
