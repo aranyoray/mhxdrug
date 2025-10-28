@@ -23,6 +23,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Call Python script to compute adjusted values
+    // Convert JavaScript boolean to Python boolean
+    const pyControlPoverty = controlPoverty ? 'True' : 'False'
+    const pyControlIncome = controlIncome ? 'True' : 'False'
+    const pyControlUrbanRural = controlUrbanRural ? 'True' : 'False'
+
     const scriptPath = path.join(process.cwd(), 'statistical_controls.py')
     const command = `python3 -c "
 import sys
@@ -33,9 +38,9 @@ result = adjust_for_confounders(
     '${countyA}',
     '${countyB}',
     ${year},
-    ${controlPoverty},
-    ${controlIncome},
-    ${controlUrbanRural}
+    ${pyControlPoverty},
+    ${pyControlIncome},
+    ${pyControlUrbanRural}
 )
 print(json.dumps(result))
 "`

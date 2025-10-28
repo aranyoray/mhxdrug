@@ -25,7 +25,9 @@
       "Bash(git ls-tree:*)",
       "Read(//private/tmp/**)",
       "Bash(jobs:*)",
-      "Bash(xargs kill:*)"
+      "Bash(xargs kill:*)",
+      "Bash(npm run lint:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
