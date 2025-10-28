@@ -105,7 +105,14 @@ def adjust_for_confounders(
                 if conf_val is None:
                     skip = True
                     break
-                x_vals.append(conf_val)
+
+                # Encode categorical variables
+                if conf == 'urban_rural':
+                    # Binary encoding: urban=1, rural=0
+                    x_vals.append(1 if conf_val == 'urban' else 0)
+                else:
+                    # Continuous variable
+                    x_vals.append(conf_val)
 
             if not skip:
                 Y.append(y_val)
@@ -141,16 +148,29 @@ def adjust_for_confounders(
             conf_a = []
             conf_b = []
             for conf in confounder_fields:
-                # Calculate mean excluding None values
-                conf_values = [c.get(conf) for c in counties if c.get(conf) is not None]
-                mean_val = np.mean(conf_values) if conf_values else 0
-
                 val_a = county_a.get(conf)
                 val_b = county_b.get(conf)
 
-                # Use county value if available, otherwise use mean
-                conf_a.append(val_a if val_a is not None else mean_val)
-                conf_b.append(val_b if val_b is not None else mean_val)
+                # Encode categorical variables
+                if conf == 'urban_rural':
+                    # Calculate mode (most common) for categorical
+                    conf_values = [c.get(conf) for c in counties if c.get(conf) is not None]
+                    mode_val = max(set(conf_values), key=conf_values.count) if conf_values else 'rural'
+
+                    # Binary encoding: urban=1, rural=0
+                    val_a_encoded = 1 if (val_a if val_a is not None else mode_val) == 'urban' else 0
+                    val_b_encoded = 1 if (val_b if val_b is not None else mode_val) == 'urban' else 0
+
+                    conf_a.append(val_a_encoded)
+                    conf_b.append(val_b_encoded)
+                else:
+                    # Calculate mean for continuous variables
+                    conf_values = [c.get(conf) for c in counties if c.get(conf) is not None]
+                    mean_val = np.mean(conf_values) if conf_values else 0
+
+                    # Use county value if available, otherwise use mean
+                    conf_a.append(val_a if val_a is not None else mean_val)
+                    conf_b.append(val_b if val_b is not None else mean_val)
 
             # Add intercept
             X_a = np.array([1] + conf_a)

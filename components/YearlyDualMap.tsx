@@ -871,16 +871,15 @@ export default function YearlyDualMap() {
                         Control for Median Income (coming soon)
                       </span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer opacity-50">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         className="checkbox-item"
                         checked={controlUrbanRural}
                         onChange={(e) => setControlUrbanRural(e.target.checked)}
-                        disabled
                       />
                       <span className="text-sm" style={{ color: '#475569' }}>
-                        Control for Urban/Rural (coming soon)
+                        Control for Urban/Rural
                       </span>
                     </label>
                   </div>
