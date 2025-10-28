@@ -28,7 +28,8 @@
       "Bash(xargs kill:*)",
       "Bash(npm run lint:*)",
       "Bash(pkill:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

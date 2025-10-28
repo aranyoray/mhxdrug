@@ -1589,8 +1589,8 @@ export default function YearlyDualMap() {
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
                                     <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Interstate Distance</td>
-                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
-                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>N/A</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>N/A</td>
                                   </tr>
                                   <tr>
                                     <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Political Lean</td>
@@ -1615,12 +1615,9 @@ export default function YearlyDualMap() {
 
                       <div className="space-y-3 text-sm" style={{ color: 'var(--text-primary)' }}>
                         <p>
-                          <strong style={{ color: '#047857' }}>Overdose Risk Differential:</strong> After controlling for poverty, income, and urban/rural status, {fipsToName[selectedCountyA]} has {(Math.random() * 15 - 7.5).toFixed(1)}% {Math.random() > 0.5 ? 'higher' : 'lower'} overdose rates than {fipsToName[selectedCountyB]}.
+                          <strong style={{ color: '#047857' }}>Model Adjustment Available:</strong> Select confounder controls above to view statistically adjusted comparisons. Use checkboxes to control for poverty rate, median income, and urban/rural status.
                         </p>
 
-                        <p>
-                          <strong style={{ color: '#047857' }}>Interstate Proximity Effect:</strong> {fipsToName[selectedCountyA]} is {Math.random() > 0.5 ? 'closer to' : 'farther from'} major interstates (I-{Math.floor(Math.random() * 90 + 10)}, I-{Math.floor(Math.random() * 90 + 10)}), which correlates with {Math.random() > 0.5 ? 'elevated' : 'reduced'} overdose risk in our mixed-effects model (IRR={(Math.random() * 0.5 + 1).toFixed(2)}, 95% CI: {(Math.random() * 0.5 + 1).toFixed(2)}-{(Math.random() * 0.5 + 1.5).toFixed(2)}).
-                        </p>
                       </div>
                     </div>
                   )}
