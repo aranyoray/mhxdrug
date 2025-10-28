@@ -122,13 +122,11 @@ export default function Home() {
 
           {/* Main Heading - Centered */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 flex items-center justify-center gap-2 md:gap-3 flex-wrap px-2" style={{ color: 'var(--text-primary)' }}>
-              <span className="text-3xl sm:text-4xl md:text-5xl">❤️</span>
-              <span>NationVitals</span>
-              <span className="text-3xl sm:text-4xl md:text-5xl">🇺🇸</span>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 px-2" style={{ color: 'var(--text-primary)' }}>
+              US County Health Disparities Explorer
             </h1>
             <p className="text-xs sm:text-sm md:text-base px-4 max-w-3xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Interactive analysis of overdose, suicide, mental health & political patterns (2018-2023)
+              Interactive Analysis of Overdose, Suicide, Mental Health & Political Patterns (2010-2024)
             </p>
           </div>
 
