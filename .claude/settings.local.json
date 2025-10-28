@@ -27,7 +27,8 @@
       "Bash(jobs:*)",
       "Bash(xargs kill:*)",
       "Bash(npm run lint:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

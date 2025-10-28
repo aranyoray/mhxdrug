@@ -360,6 +360,43 @@ export default function YearlyDualMap() {
     fetchAdjustedData()
   }, [selectedCountyA, selectedCountyB, selectedYear, controlPoverty, controlIncome, controlUrbanRural])
 
+  // Fetch time series data for both counties across all years
+  useEffect(() => {
+    const fetchTimeSeries = async () => {
+      if (!selectedCountyA || !selectedCountyB) {
+        setTimeSeriesData(null)
+        return
+      }
+
+      setLoadingTimeSeries(true)
+      try {
+        const seriesData: any = {
+          countyA: {},
+          countyB: {},
+          years: years
+        }
+
+        // Load data for all years
+        for (const year of years) {
+          const data = yearlyData[year]
+          if (data) {
+            seriesData.countyA[year] = data[selectedCountyA]
+            seriesData.countyB[year] = data[selectedCountyB]
+          }
+        }
+
+        setTimeSeriesData(seriesData)
+      } catch (error) {
+        console.error('Error fetching time series:', error)
+        setTimeSeriesData(null)
+      } finally {
+        setLoadingTimeSeries(false)
+      }
+    }
+
+    fetchTimeSeries()
+  }, [selectedCountyA, selectedCountyB, yearlyData, years])
+
   const getColorForValue = (value: number | null, isPolitic: boolean): string => {
     // Show gray for NA/missing data
     if (value === null || value === undefined) return '#d1d5db'
@@ -1116,6 +1153,76 @@ export default function YearlyDualMap() {
                       })}
                     </div>
                   </div>
+
+                  {/* Year-wise Trends */}
+                  {timeSeriesData && (
+                    <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
+                      <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
+                        📈 Year-over-Year Trends (2018-2023)
+                      </h3>
+
+                      {['DrugDeathRate', 'SuicideRate', 'UnemploymentRate'].map((metric) => {
+                        const labels: Record<string, string> = {
+                          DrugDeathRate: 'Drug Death Rate (per 100k)',
+                          SuicideRate: 'Suicide Rate (per 100k)',
+                          UnemploymentRate: 'Unemployment Rate (%)'
+                        }
+
+                        return (
+                          <div key={metric} className="mb-6 last:mb-0">
+                            <div className="text-sm font-semibold mb-3" style={{ color: '#64748b' }}>
+                              {labels[metric]}
+                            </div>
+
+                            <div className="space-y-2">
+                              {years.map((year) => {
+                                const valA = timeSeriesData.countyA[year]?.[metric]
+                                const valB = timeSeriesData.countyB[year]?.[metric]
+                                const isSuppressedA = timeSeriesData.countyA[year]?.Is_Suppressed
+                                const isSuppressedB = timeSeriesData.countyB[year]?.Is_Suppressed
+
+                                const displayA = isSuppressedA ? 'N/A' : valA !== null && valA !== undefined ? valA.toFixed(1) : 'N/A'
+                                const displayB = isSuppressedB ? 'N/A' : valB !== null && valB !== undefined ? valB.toFixed(1) : 'N/A'
+
+                                return (
+                                  <div key={year} className="flex items-center gap-3 text-xs">
+                                    <div className="w-12 font-medium" style={{ color: '#94a3b8' }}>{year}</div>
+                                    <div className="flex-1 grid grid-cols-2 gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
+                                        <span style={{ color: '#1e293b' }}>{displayA}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }}></div>
+                                        <span style={{ color: '#1e293b' }}>{displayB}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+
+                            <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: '#94a3b8' }}>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
+                                <span>{fipsToName[selectedCountyA]}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }}></div>
+                                <span>{fipsToName[selectedCountyB]}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {loadingTimeSeries && (
+                        <div className="text-center py-4 text-sm" style={{ color: '#3b82f6' }}>
+                          Loading trend data...
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Summary */}
                   <div className="rounded-xl p-5" style={{ background: 'rgba(59, 130, 246, 0.1)' }}>
