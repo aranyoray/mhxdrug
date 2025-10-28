@@ -89,8 +89,8 @@ export default function Home() {
     }).catch(error => {
       clearTimeout(timeout)
       console.error('Failed to load dashboard data:', error)
+      alert(`Warning: Failed to load summary data. Error: ${error.message}. The dashboard may not display correctly. Please refresh the page.`)
       setLoading(false)
-      // Show error but continue - dashboard will work with cached data
     })
   }, [])
 
@@ -272,16 +272,16 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
             <div className="stat-card">
               <h3 className="stat-card-title">OBSERVATIONS</h3>
-              <p className="stat-card-value">{summary?.total_observations?.toLocaleString()}</p>
+              <p className="stat-card-value">{summary?.total_observations?.toLocaleString() || 'Loading...'}</p>
             </div>
             <div className="stat-card">
               <h3 className="stat-card-title">COUNTIES</h3>
-              <p className="stat-card-value">{summary?.total_counties?.toLocaleString()}</p>
+              <p className="stat-card-value">{summary?.total_counties?.toLocaleString() || 'Loading...'}</p>
             </div>
             <div className="stat-card">
               <h3 className="stat-card-title">CORRELATION</h3>
               <p className="stat-card-value stat-card-accent">
-                {summary?.avg_correlation?.toFixed(3)}
+                {summary?.avg_correlation?.toFixed(3) || 'Loading...'}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Politics ↔ Drug Deaths</p>
             </div>
