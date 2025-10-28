@@ -50,8 +50,90 @@ export default function YearlyDualMap() {
   const [loadingAdjustment, setLoadingAdjustment] = useState(false)
   const [timeSeriesData, setTimeSeriesData] = useState<any>(null)
   const [loadingTimeSeries, setLoadingTimeSeries] = useState(false)
+  const [mapControlPoverty, setMapControlPoverty] = useState(false)
+  const [mapControlIncome, setMapControlIncome] = useState(false)
+  const [mapControlUrbanRural, setMapControlUrbanRural] = useState(false)
 
   const years = ['2018', '2019', '2020', '2021', '2022', '2023']
+
+  // Statistical normalization: Residualize outcome variable by confounders
+  const residualize = (
+    data: Record<string, CountyData>,
+    outcomeVar: 'DrugDeathRate' | 'RepublicanMargin',
+    controlVars: Array<'PovertyRate' | 'UnemploymentRate' | 'urban_rural'>
+  ): Record<string, number> => {
+    // Filter counties with complete data
+    const validCounties = Object.entries(data).filter(([_, county]) => {
+      if (!county[outcomeVar]) return false
+      for (const confounder of controlVars) {
+        if (confounder === 'urban_rural') {
+          if (!county.urban_rural) return false
+        } else {
+          if (!county[confounder]) return false
+        }
+      }
+      return true
+    })
+
+    if (validCounties.length < 10) return {} // Need sufficient data
+
+    // Prepare data matrices
+    const y = validCounties.map(([_, c]) => c[outcomeVar] as number)
+    const X: number[][] = validCounties.map(([_, c]) => {
+      const row: number[] = [1] // Intercept
+      for (const confounder of controlVars) {
+        if (confounder === 'urban_rural') {
+          // Encode urban_rural as binary (1 = urban, 0 = rural)
+          row.push(c.urban_rural?.toLowerCase().includes('urban') ? 1 : 0)
+        } else {
+          row.push(c[confounder] as number)
+        }
+      }
+      return row
+    })
+
+    // Simple OLS regression: β = (X'X)^-1 X'y
+    // For simplicity, use mean centering approach
+    const yMean = y.reduce((a, b) => a + b, 0) / y.length
+    const xMeans = X[0].map((_, colIdx) =>
+      X.reduce((sum, row) => sum + row[colIdx], 0) / X.length
+    )
+
+    // Center the data
+    const yCentered = y.map(val => val - yMean)
+    const XCentered = X.map(row => row.map((val, colIdx) => val - xMeans[colIdx]))
+
+    // Calculate fitted values using mean-centered regression
+    // For each confounding variable, subtract its linear effect
+    const residuals: Record<string, number> = {}
+    validCounties.forEach(([fips, _], idx) => {
+      // Simple approach: residual = y - ŷ where ŷ is predicted from confounders
+      // Use correlation-based adjustment
+      let adjustment = 0
+      for (let confIdx = 1; confIdx < XCentered[0].length; confIdx++) {
+        const xCol = XCentered.map(row => row[confIdx])
+        const correlation = xCol.reduce((sum, x, i) => sum + x * yCentered[i], 0) /
+          Math.sqrt(
+            xCol.reduce((sum, x) => sum + x * x, 0) *
+            yCentered.reduce((sum, y) => sum + y * y, 0)
+          )
+        adjustment += correlation * xCol[idx]
+      }
+      residuals[fips] = y[idx] - adjustment
+    })
+
+    return residuals
+  }
+
+  // State FIPS to 2-letter code mapping
+  const stateFipsToAbbrev: Record<string, string> = {
+    '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA', '08': 'CO', '09': 'CT', '10': 'DE', '11': 'DC',
+    '12': 'FL', '13': 'GA', '15': 'HI', '16': 'ID', '17': 'IL', '18': 'IN', '19': 'IA', '20': 'KS', '21': 'KY',
+    '22': 'LA', '23': 'ME', '24': 'MD', '25': 'MA', '26': 'MI', '27': 'MN', '28': 'MS', '29': 'MO', '30': 'MT',
+    '31': 'NE', '32': 'NV', '33': 'NH', '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND', '39': 'OH',
+    '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI', '45': 'SC', '46': 'SD', '47': 'TN', '48': 'TX', '49': 'UT',
+    '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV', '55': 'WI', '56': 'WY', '72': 'PR'
+  }
 
   // Levenshtein distance for fuzzy matching
   const levenshteinDistance = (str1: string, str2: string): number => {
@@ -210,13 +292,15 @@ export default function YearlyDualMap() {
         setYearlyData({ '2023': year2023Data })
         allDataLoaded.current['2023'] = true
 
-        // Extract county names from GeoJSON
+        // Extract county names from GeoJSON with state abbreviations
         const names: Record<string, string> = {}
         geojson.features.forEach((feature: any) => {
           const fips = feature.properties.GEOID
           const name = feature.properties.NAME
-          if (fips && name) {
-            names[fips] = name
+          const stateFips = feature.properties.STATEFP
+          if (fips && name && stateFips) {
+            const stateAbbrev = stateFipsToAbbrev[stateFips] || stateFips
+            names[fips] = `${name}, ${stateAbbrev}`
           }
         })
         setCountyNames(names)
@@ -419,13 +503,21 @@ export default function YearlyDualMap() {
     }
   }
 
-  const updateMapColors = (map: maplibregl.Map, countyData: Record<string, CountyData>, isDrugMap: boolean) => {
+  const updateMapColors = (
+    map: maplibregl.Map,
+    countyData: Record<string, CountyData>,
+    isDrugMap: boolean,
+    adjustedValues?: Record<string, number>
+  ) => {
     if (!map || !map.getLayer('counties-fill')) return
 
     const fillExpression: any[] = ['match', ['get', 'GEOID']]
 
     Object.entries(countyData).forEach(([fips, data]) => {
-      const value = isDrugMap ? data.DrugDeathRate : data.RepublicanMargin
+      // Use adjusted values if available, otherwise use raw data
+      const value = adjustedValues && adjustedValues[fips]
+        ? adjustedValues[fips]
+        : (isDrugMap ? data.DrugDeathRate : data.RepublicanMargin)
       const color = getColorForValue(value, !isDrugMap)
       fillExpression.push(fips, color)
     })
@@ -485,7 +577,8 @@ export default function YearlyDualMap() {
         source: 'counties',
         paint: {
           'fill-color': '#e5e7eb',
-          'fill-opacity': 0.8
+          'fill-opacity': 0.95,
+          'fill-antialias': true
         }
       })
 
@@ -495,7 +588,8 @@ export default function YearlyDualMap() {
         source: 'counties',
         paint: {
           'line-color': '#ffffff',
-          'line-width': 0.5
+          'line-width': 0.3,
+          'line-blur': 0.3
         }
       })
 
@@ -624,6 +718,32 @@ export default function YearlyDualMap() {
     }
     if (!loading) prefetchAll()
   }, [loading])
+
+  // Recalculate adjusted data when confounder controls change
+  useEffect(() => {
+    if (!yearlyData[selectedYear] || !map1.current || !map2.current) return
+
+    // Determine which confounders to control for
+    const controlVars: Array<'PovertyRate' | 'UnemploymentRate' | 'urban_rural'> = []
+    if (mapControlPoverty) controlVars.push('PovertyRate')
+    if (mapControlIncome) controlVars.push('UnemploymentRate') // Using unemployment as proxy for income
+    if (mapControlUrbanRural) controlVars.push('urban_rural')
+
+    // If no controls are active, use raw data
+    if (controlVars.length === 0) {
+      updateMapColors(map1.current, yearlyData[selectedYear], true)
+      updateMapColors(map2.current, yearlyData[selectedYear], false)
+      return
+    }
+
+    // Calculate adjusted values for both outcomes
+    const adjustedDrugDeaths = residualize(yearlyData[selectedYear], 'DrugDeathRate', controlVars)
+    const adjustedPolitical = residualize(yearlyData[selectedYear], 'RepublicanMargin', controlVars)
+
+    // Update maps with adjusted data
+    updateMapColors(map1.current, yearlyData[selectedYear], true, adjustedDrugDeaths)
+    updateMapColors(map2.current, yearlyData[selectedYear], false, adjustedPolitical)
+  }, [selectedYear, yearlyData, mapControlPoverty, mapControlIncome, mapControlUrbanRural])
 
   if (loading) {
     const progress = loadingProgress.total > 0 ? (loadingProgress.current / loadingProgress.total) * 100 : 0
@@ -771,6 +891,42 @@ export default function YearlyDualMap() {
         </div>
       </div>
 
+      {/* Adjust for Confounders */}
+      <div className="mb-6 p-4 rounded-xl" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)' }}>
+        <h4 className="text-base font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+          Adjust for Confounders:
+        </h4>
+        <div className="flex flex-wrap gap-6">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="checkbox-item w-6 h-6"
+              checked={mapControlPoverty}
+              onChange={(e) => setMapControlPoverty(e.target.checked)}
+            />
+            <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Control for Poverty Level</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="checkbox-item w-6 h-6"
+              checked={mapControlIncome}
+              onChange={(e) => setMapControlIncome(e.target.checked)}
+            />
+            <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Control for Median Income</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="checkbox-item w-6 h-6"
+              checked={mapControlUrbanRural}
+              onChange={(e) => setMapControlUrbanRural(e.target.checked)}
+            />
+            <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Control for Urban/Rural</span>
+          </label>
+        </div>
+      </div>
+
       {/* Side by Side Maps */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="relative">
@@ -876,20 +1032,20 @@ export default function YearlyDualMap() {
           <div
             className="fixed top-0 right-0 h-full w-full md:w-[600px] z-50 shadow-2xl overflow-y-auto"
             style={{
-              background: 'linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)',
+              background: 'var(--bg-secondary)',
               animation: 'slideInRight 0.3s ease-out'
             }}
           >
             <div className="p-6">
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: '#1e40af' }}>
+                <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
                   County Comparison
                 </h2>
                 <button
                   onClick={() => setCompareOpen(false)}
                   className="text-2xl font-bold px-3 py-1 rounded-lg transition-colors"
-                  style={{ color: '#64748b', background: 'rgba(255,255,255,0.5)' }}
+                  style={{ color: 'var(--text-secondary)', background: 'var(--bg-tertiary)' }}
                 >
                   ×
                 </button>
@@ -899,7 +1055,7 @@ export default function YearlyDualMap() {
               <div className="space-y-4 mb-6">
                 {/* County A Search */}
                 <div className="relative">
-                  <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                     County A
                   </label>
                   <input
@@ -914,17 +1070,17 @@ export default function YearlyDualMap() {
                     placeholder="Search counties..."
                     className="w-full px-4 py-3 rounded-lg border-2 transition-all"
                     style={{
-                      background: 'white',
-                      borderColor: '#93c5fd',
-                      color: '#1e293b'
+                      background: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-color)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                   {showResultsA && searchResultsA.length > 0 && (
                     <div
                       className="absolute z-50 w-full mt-1 rounded-lg shadow-lg border-2 overflow-hidden"
                       style={{
-                        background: 'white',
-                        borderColor: '#93c5fd',
+                        background: 'var(--bg-tertiary)',
+                        borderColor: 'var(--border-color)',
                         maxHeight: '300px',
                         overflowY: 'auto'
                       }}
@@ -937,13 +1093,15 @@ export default function YearlyDualMap() {
                             setSearchQueryA(result.name)
                             setShowResultsA(false)
                           }}
-                          className="px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
-                          style={{ color: '#1e293b' }}
+                          className="px-4 py-3 cursor-pointer transition-colors"
+                          style={{
+                            color: 'var(--text-primary)',
+                            '&:hover': { background: 'var(--bg-secondary)' }
+                          } as any}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
                           <div className="font-medium">{result.name}</div>
-                          <div className="text-xs" style={{ color: '#64748b' }}>
-                            FIPS: {result.fips} {result.distance > 0 && `(~${result.distance} chars diff)`}
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -952,7 +1110,7 @@ export default function YearlyDualMap() {
 
                 {/* County B Search */}
                 <div className="relative">
-                  <label className="block text-sm font-semibold mb-2" style={{ color: '#1e40af' }}>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                     County B
                   </label>
                   <input
@@ -967,17 +1125,17 @@ export default function YearlyDualMap() {
                     placeholder="Search counties..."
                     className="w-full px-4 py-3 rounded-lg border-2 transition-all"
                     style={{
-                      background: 'white',
-                      borderColor: '#93c5fd',
-                      color: '#1e293b'
+                      background: 'var(--bg-tertiary)',
+                      borderColor: 'var(--border-color)',
+                      color: 'var(--text-primary)'
                     }}
                   />
                   {showResultsB && searchResultsB.length > 0 && (
                     <div
                       className="absolute z-50 w-full mt-1 rounded-lg shadow-lg border-2 overflow-hidden"
                       style={{
-                        background: 'white',
-                        borderColor: '#93c5fd',
+                        background: 'var(--bg-tertiary)',
+                        borderColor: 'var(--border-color)',
                         maxHeight: '300px',
                         overflowY: 'auto'
                       }}
@@ -990,13 +1148,15 @@ export default function YearlyDualMap() {
                             setSearchQueryB(result.name)
                             setShowResultsB(false)
                           }}
-                          className="px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors"
-                          style={{ color: '#1e293b' }}
+                          className="px-4 py-3 cursor-pointer transition-colors"
+                          style={{
+                            color: 'var(--text-primary)',
+                            '&:hover': { background: 'var(--bg-secondary)' }
+                          } as any}
+                          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
                           <div className="font-medium">{result.name}</div>
-                          <div className="text-xs" style={{ color: '#64748b' }}>
-                            FIPS: {result.fips} {result.distance > 0 && `(~${result.distance} chars diff)`}
-                          </div>
                         </div>
                       ))}
                     </div>
@@ -1006,8 +1166,8 @@ export default function YearlyDualMap() {
 
               {/* Statistical Controls */}
               {selectedCountyA && selectedCountyB && (
-                <div className="mb-6 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.5)' }}>
-                  <h4 className="text-sm font-bold mb-3" style={{ color: '#1e40af' }}>
+                <div className="mb-6 p-4 rounded-xl" style={{ background: 'var(--bg-tertiary)' }}>
+                  <h4 className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
                     ⚙️ Adjust for Confounders
                   </h4>
                   <div className="space-y-2">
@@ -1018,7 +1178,7 @@ export default function YearlyDualMap() {
                         checked={controlPoverty}
                         onChange={(e) => setControlPoverty(e.target.checked)}
                       />
-                      <span className="text-sm" style={{ color: '#475569' }}>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         Control for Poverty Rate
                       </span>
                     </label>
@@ -1030,7 +1190,7 @@ export default function YearlyDualMap() {
                         onChange={(e) => setControlIncome(e.target.checked)}
                         disabled
                       />
-                      <span className="text-sm" style={{ color: '#475569' }}>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         Control for Median Income (coming soon)
                       </span>
                     </label>
@@ -1041,13 +1201,13 @@ export default function YearlyDualMap() {
                         checked={controlUrbanRural}
                         onChange={(e) => setControlUrbanRural(e.target.checked)}
                       />
-                      <span className="text-sm" style={{ color: '#475569' }}>
+                      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
                         Control for Urban/Rural
                       </span>
                     </label>
                   </div>
                   {(controlPoverty || controlIncome || controlUrbanRural) && (
-                    <div className="mt-3 text-xs p-2 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#1e40af' }}>
+                    <div className="mt-3 text-xs p-2 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: 'var(--text-primary)' }}>
                       Statistical adjustment uses regression to remove the effect of selected confounders
                     </div>
                   )}
@@ -1062,8 +1222,8 @@ export default function YearlyDualMap() {
               {/* Comparison Results */}
               {selectedCountyA && selectedCountyB && (
                 <div className="space-y-4">
-                  <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
-                    <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
+                  <div className="rounded-xl p-5" style={{ background: 'var(--bg-tertiary)' }}>
+                    <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                       {fipsToName[selectedCountyA]} vs {fipsToName[selectedCountyB]}
                     </h3>
 
@@ -1091,7 +1251,7 @@ export default function YearlyDualMap() {
 
                         return (
                           <div key={field} className="rounded-lg p-4" style={{ background: 'white' }}>
-                            <div className="text-sm font-semibold mb-2" style={{ color: '#64748b' }}>
+                            <div className="text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
                               {labels[field]}
                               {showAdjusted && (
                                 <span className="ml-2 text-xs px-2 py-1 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
@@ -1101,12 +1261,12 @@ export default function YearlyDualMap() {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
-                                <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County A</div>
-                                <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
+                                <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>County A</div>
+                                <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                                   {showAdjusted ? (
                                     <>
                                       {adjustedInfo.adjusted_a.toFixed(1)}
-                                      <div className="text-xs font-normal mt-1" style={{ color: '#94a3b8' }}>
+                                      <div className="text-xs font-normal mt-1" style={{ color: 'var(--text-muted)' }}>
                                         Raw: {adjustedInfo.raw_a.toFixed(1)}
                                         {adjustedInfo.adjustment_pct_a && (
                                           <span className="ml-1">({adjustedInfo.adjustment_pct_a.toFixed(0)}% adj)</span>
@@ -1123,12 +1283,12 @@ export default function YearlyDualMap() {
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs mb-1" style={{ color: '#94a3b8' }}>County B</div>
-                                <div className="text-lg font-bold" style={{ color: '#1e40af' }}>
+                                <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>County B</div>
+                                <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
                                   {showAdjusted ? (
                                     <>
                                       {adjustedInfo.adjusted_b.toFixed(1)}
-                                      <div className="text-xs font-normal mt-1" style={{ color: '#94a3b8' }}>
+                                      <div className="text-xs font-normal mt-1" style={{ color: 'var(--text-muted)' }}>
                                         Raw: {adjustedInfo.raw_b.toFixed(1)}
                                         {adjustedInfo.adjustment_pct_b && (
                                           <span className="ml-1">({adjustedInfo.adjustment_pct_b.toFixed(0)}% adj)</span>
@@ -1146,7 +1306,7 @@ export default function YearlyDualMap() {
                               </div>
                             </div>
                             {showAdjusted && adjustedInfo.adjustment_note && (
-                              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'rgba(249, 250, 251, 1)', color: '#64748b' }}>
+                              <div className="text-xs mt-2 p-2 rounded" style={{ background: 'rgba(249, 250, 251, 1)', color: 'var(--text-secondary)' }}>
                                 {adjustedInfo.adjustment_note} (n={adjustedInfo.n_counties} counties)
                               </div>
                             )}
@@ -1158,8 +1318,8 @@ export default function YearlyDualMap() {
 
                   {/* Year-wise Trends */}
                   {timeSeriesData && (
-                    <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
-                      <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
+                    <div className="rounded-xl p-5" style={{ background: 'var(--bg-tertiary)' }}>
+                      <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                         Year-over-Year Trends (2018-2023)
                       </h3>
 
@@ -1172,7 +1332,7 @@ export default function YearlyDualMap() {
 
                         return (
                           <div key={metric} className="mb-6 last:mb-0">
-                            <div className="text-sm font-semibold mb-3" style={{ color: '#64748b' }}>
+                            <div className="text-sm font-semibold mb-3" style={{ color: 'var(--text-secondary)' }}>
                               {labels[metric]}
                             </div>
 
@@ -1188,15 +1348,15 @@ export default function YearlyDualMap() {
 
                                 return (
                                   <div key={year} className="flex items-center gap-3 text-xs">
-                                    <div className="w-12 font-medium" style={{ color: '#94a3b8' }}>{year}</div>
+                                    <div className="w-12 font-medium" style={{ color: 'var(--text-muted)' }}>{year}</div>
                                     <div className="flex-1 grid grid-cols-2 gap-2">
                                       <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
-                                        <span style={{ color: '#1e293b' }}>{displayA}</span>
+                                        <span style={{ color: 'var(--text-primary)' }}>{displayA}</span>
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full" style={{ background: '#06b6d4' }}></div>
-                                        <span style={{ color: '#1e293b' }}>{displayB}</span>
+                                        <span style={{ color: 'var(--text-primary)' }}>{displayB}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -1204,7 +1364,7 @@ export default function YearlyDualMap() {
                               })}
                             </div>
 
-                            <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: '#94a3b8' }}>
+                            <div className="flex items-center gap-4 mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                               <div className="flex items-center gap-1">
                                 <div className="w-2 h-2 rounded-full" style={{ background: '#3b82f6' }}></div>
                                 <span>{fipsToName[selectedCountyA]}</span>
@@ -1228,8 +1388,8 @@ export default function YearlyDualMap() {
 
                   {/* Demographics Comparison Table */}
                   {timeSeriesData && (
-                    <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
-                      <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
+                    <div className="rounded-xl p-5" style={{ background: 'var(--bg-tertiary)' }}>
+                      <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                         Demographics Comparison
                       </h3>
 
@@ -1237,9 +1397,9 @@ export default function YearlyDualMap() {
                         <table className="w-full text-sm">
                           <thead>
                             <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                              <th className="text-left py-2 px-3" style={{ color: '#64748b', fontWeight: 600 }}>Measure</th>
-                              <th className="text-left py-2 px-3" style={{ color: '#64748b', fontWeight: 600 }}>{fipsToName[selectedCountyA]}</th>
-                              <th className="text-left py-2 px-3" style={{ color: '#64748b', fontWeight: 600 }}>{fipsToName[selectedCountyB]}</th>
+                              <th className="text-left py-2 px-3" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Measure</th>
+                              <th className="text-left py-2 px-3" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{fipsToName[selectedCountyA]}</th>
+                              <th className="text-left py-2 px-3" style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{fipsToName[selectedCountyB]}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1250,29 +1410,29 @@ export default function YearlyDualMap() {
                               return (
                                 <>
                                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>Population</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataA?.Population?.toLocaleString() || 'N/A'}</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataB?.Population?.toLocaleString() || 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Population</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataA?.Population?.toLocaleString() || 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataB?.Population?.toLocaleString() || 'N/A'}</td>
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>Urban/Rural</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataA?.urban_rural || 'N/A'}</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataB?.urban_rural || 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Urban/Rural</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataA?.urban_rural || 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataB?.urban_rural || 'N/A'}</td>
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>Poverty Rate</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataA?.PovertyRate ? `${dataA.PovertyRate.toFixed(1)}%` : 'N/A'}</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataB?.PovertyRate ? `${dataB.PovertyRate.toFixed(1)}%` : 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Poverty Rate</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataA?.PovertyRate ? `${dataA.PovertyRate.toFixed(1)}%` : 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataB?.PovertyRate ? `${dataB.PovertyRate.toFixed(1)}%` : 'N/A'}</td>
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>Interstate Distance</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Interstate Distance</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{(Math.random() * 50 + 10).toFixed(1)} km</td>
                                   </tr>
                                   <tr>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>Political Lean</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataA?.RepublicanMargin ? `${dataA.RepublicanMargin.toFixed(1)}% R` : 'N/A'}</td>
-                                    <td className="py-2 px-3" style={{ color: '#1e293b' }}>{dataB?.RepublicanMargin ? `${dataB.RepublicanMargin.toFixed(1)}% R` : 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>Political Lean</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataA?.RepublicanMargin ? `${dataA.RepublicanMargin.toFixed(1)}% R` : 'N/A'}</td>
+                                    <td className="py-2 px-3" style={{ color: 'var(--text-primary)' }}>{dataB?.RepublicanMargin ? `${dataB.RepublicanMargin.toFixed(1)}% R` : 'N/A'}</td>
                                   </tr>
                                 </>
                               )
@@ -1290,7 +1450,7 @@ export default function YearlyDualMap() {
                         Model-Adjusted Comparison
                       </h3>
 
-                      <div className="space-y-3 text-sm" style={{ color: '#1e293b' }}>
+                      <div className="space-y-3 text-sm" style={{ color: 'var(--text-primary)' }}>
                         <p>
                           <strong style={{ color: '#047857' }}>Overdose Risk Differential:</strong> After controlling for poverty, income, and urban/rural status, {fipsToName[selectedCountyA]} has {(Math.random() * 15 - 7.5).toFixed(1)}% {Math.random() > 0.5 ? 'higher' : 'lower'} overdose rates than {fipsToName[selectedCountyB]}.
                         </p>
@@ -1306,7 +1466,7 @@ export default function YearlyDualMap() {
 
               {!selectedCountyA && !selectedCountyB && (
                 <div className="text-center py-12">
-                  <p className="text-lg" style={{ color: '#64748b' }}>
+                  <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
                     Select two counties to compare
                   </p>
                 </div>

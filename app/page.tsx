@@ -127,72 +127,6 @@ export default function Home() {
               Interactive Analysis of Overdose, Suicide, Mental Health & Political Patterns (2010-2024)
             </p>
           </div>
-
-          {/* About Link - Centered Below */}
-          <div className="flex justify-center mb-6">
-            <a
-              href="/about"
-              className="px-4 py-2 rounded-md text-sm md:text-base transition-all duration-200 hover:shadow-md"
-              style={{
-                background: 'var(--bg-tertiary)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-color)',
-                textDecoration: 'none'
-              }}
-            >
-              About This Project
-            </a>
-          </div>
-        </div>
-
-        {/* Key Findings */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="stat-card">
-            <h3 className="stat-card-title">Observations</h3>
-            <p className="stat-card-value">{summary?.total_observations?.toLocaleString()}</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="stat-card-title">Counties</h3>
-            <p className="stat-card-value">{summary?.total_counties?.toLocaleString()}</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="stat-card-title">Correlation</h3>
-            <p className="stat-card-value stat-card-accent">
-              {summary?.avg_correlation?.toFixed(3)}
-            </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Politics ↔ Drug Deaths</p>
-          </div>
-        </div>
-
-        {/* Averages */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="panel">
-            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Average Deaths</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Drug Deaths:</span>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{summary?.avg_drug_deaths?.toFixed(1)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Suicide Deaths:</span>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{summary?.avg_suicide_deaths?.toFixed(1)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="panel">
-            <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Data Completeness</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Drug Deaths:</span>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{summary?.completeness?.drug_deaths_pct?.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Political Data:</span>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{summary?.completeness?.political_pct?.toFixed(1)}%</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* County Map Visualization */}
@@ -204,27 +138,27 @@ export default function Home() {
 
         {/* Severity Scale Legend */}
         <div className="mb-6 mx-2 md:mx-0">
-          <h3 className="text-base md:text-lg font-semibold mb-3 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>Severity Scale</h3>
+          <h3 className="text-base md:text-lg font-bold mb-3 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>Severity Scale</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3 text-xs md:text-sm">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded" style={{ background: '#22c55e' }}></div>
-              <span style={{ color: 'var(--text-primary)' }}>1-2: Very Low</span>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>1-2: Very Low</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded" style={{ background: '#facc15' }}></div>
-              <span style={{ color: 'var(--text-primary)' }}>3-4: Low-Med</span>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>3-4: Low-Med</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded" style={{ background: '#f97316' }}></div>
-              <span style={{ color: 'var(--text-primary)' }}>5-6: Medium</span>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>5-6: Medium</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded" style={{ background: '#dc2626' }}></div>
-              <span style={{ color: 'var(--text-primary)' }}>7-10: High</span>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>7-10: High</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded" style={{ background: '#d1d5db' }}></div>
-              <span style={{ color: 'var(--text-primary)' }}>No Data</span>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>No Data</span>
             </div>
           </div>
         </div>
@@ -232,7 +166,7 @@ export default function Home() {
         {/* States Table */}
         <div className="data-table">
           <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--border-color)' }}>
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>State Summary with Emoji Rankings</h3>
+            <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>State-Wise Summary of Drug and Suicide Mortality and Political Lean</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -240,27 +174,27 @@ export default function Home() {
                 <tr>
                   <th
                     onClick={() => handleSort('state_name')}
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     <div className="flex items-center gap-2">
                       State <SortIndicator column="state_name" />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Drug Severity</th>
+                  <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Drug Severity</th>
                   <th
                     onClick={() => handleSort('DrugDeaths')}
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     <div className="flex items-center gap-2">
                       Drug Deaths <SortIndicator column="DrugDeaths" />
                     </div>
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Suicide Severity</th>
+                  <th className="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Suicide Severity</th>
                   <th
                     onClick={() => handleSort('SuicideDeaths')}
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     <div className="flex items-center gap-2">
@@ -269,7 +203,7 @@ export default function Home() {
                   </th>
                   <th
                     onClick={() => handleSort('RepublicanMargin')}
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     <div className="flex items-center gap-2">
@@ -278,7 +212,7 @@ export default function Home() {
                   </th>
                   <th
                     onClick={() => handleSort('n_counties')}
-                    className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
+                    className="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-opacity-10 hover:bg-blue-500 transition-colors"
                     style={{ color: 'var(--text-secondary)' }}
                   >
                     <div className="flex items-center gap-2">
@@ -296,25 +230,33 @@ export default function Home() {
 
                   return sortedStateData(validStates).map((state: any, idx: number) => (
                     <tr key={idx}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                         {state.state_name || state.state_fips}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="w-8 h-8 rounded-full mx-auto" style={{ background: getSeverityColor(state.DrugDeaths, maxDrugDeaths) }}></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                         {state.DrugDeaths?.toFixed(1) || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="w-8 h-8 rounded-full mx-auto" style={{ background: getSeverityColor(state.SuicideDeaths, maxSuicideDeaths) }}></div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                         {state.SuicideDeaths?.toFixed(1) || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {state.RepublicanMargin ? `${state.RepublicanMargin.toFixed(1)}%` : 'N/A'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
+                        <span style={{
+                          color: state.RepublicanMargin
+                            ? state.RepublicanMargin > 0
+                              ? '#dc2626'  // Red for Republican
+                              : '#2563eb'  // Blue for Democrat
+                            : 'var(--text-primary)'
+                        }}>
+                          {state.RepublicanMargin ? `${state.RepublicanMargin > 0 ? '+' : ''}${state.RepublicanMargin.toFixed(1)}%` : 'N/A'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold">
                         {state.n_counties || 'N/A'}
                       </td>
                     </tr>
@@ -322,6 +264,73 @@ export default function Home() {
                 })()}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* Key Statistics - Moved to Bottom */}
+        <div className="mt-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="stat-card">
+              <h3 className="stat-card-title">OBSERVATIONS</h3>
+              <p className="stat-card-value">{summary?.total_observations?.toLocaleString()}</p>
+            </div>
+            <div className="stat-card">
+              <h3 className="stat-card-title">COUNTIES</h3>
+              <p className="stat-card-value">{summary?.total_counties?.toLocaleString()}</p>
+            </div>
+            <div className="stat-card">
+              <h3 className="stat-card-title">CORRELATION</h3>
+              <p className="stat-card-value stat-card-accent">
+                {summary?.avg_correlation?.toFixed(3)}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Politics ↔ Drug Deaths</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="panel">
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Average Deaths</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>Drug Deaths:</span>
+                  <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.avg_drug_deaths?.toFixed(1)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>Suicide Deaths:</span>
+                  <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.avg_suicide_deaths?.toFixed(1)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="panel">
+              <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Data Completeness</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>Drug Deaths:</span>
+                  <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.completeness?.drug_deaths_pct?.toFixed(1)}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-bold" style={{ color: 'var(--text-secondary)' }}>Political Data:</span>
+                  <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{summary?.completeness?.political_pct?.toFixed(1)}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* About Link - Moved to Bottom */}
+          <div className="flex justify-center mb-6">
+            <a
+              href="/about"
+              className="px-4 py-2 rounded-md text-sm md:text-base font-bold transition-all duration-200 hover:shadow-md"
+              style={{
+                background: 'var(--bg-tertiary)',
+                color: 'var(--text-primary)',
+                border: '1px solid var(--border-color)',
+                textDecoration: 'none'
+              }}
+            >
+              About This Project
+            </a>
           </div>
         </div>
 
