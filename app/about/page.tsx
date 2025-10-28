@@ -70,7 +70,7 @@ export default function AboutPage() {
           <h2 className="text-lg md:text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Limitations & Ethical Considerations</h2>
           <div className="space-y-3 text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
             <p>
-              <strong style={{ color: 'var(--warning)' }}>⚠️ Ecological Inference Caveat:</strong> All analyses use county-level aggregate data. Associations observed at the county level do not necessarily apply to individuals (ecological fallacy).
+              <strong style={{ color: 'var(--warning)' }}>Ecological Inference Caveat:</strong> All analyses use county-level aggregate data. Associations observed at the county level do not necessarily apply to individuals (ecological fallacy).
             </p>
             <p>
               <strong style={{ color: 'var(--text-primary)' }}>Data Suppression:</strong> Counties with &lt;10 deaths in a year are suppressed to protect privacy, following CDC guidelines.

@@ -13,22 +13,22 @@ export default function Home() {
   const [sortColumn, setSortColumn] = useState<string>('DrugDeaths')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
-  // Emoji ranking function (1-10 scale)
-  const getEmojiRank = (value: number | null, maxValue: number): string => {
-    if (!value || maxValue === 0) return '⚪' // No data
+  // Severity color function (1-10 scale)
+  const getSeverityColor = (value: number | null, maxValue: number): string => {
+    if (!value || maxValue === 0) return '#d1d5db' // No data
 
     const normalized = (value / maxValue) * 10 // Scale to 1-10
 
-    if (normalized <= 1) return '🟢' // 1 - Very Low
-    if (normalized <= 2) return '🟢' // 2 - Low
-    if (normalized <= 3) return '🟡' // 3 - Low-Medium
-    if (normalized <= 4) return '🟡' // 4 - Medium-Low
-    if (normalized <= 5) return '🟠' // 5 - Medium
-    if (normalized <= 6) return '🟠' // 6 - Medium-High
-    if (normalized <= 7) return '🔴' // 7 - High
-    if (normalized <= 8) return '🔴' // 8 - Very High
-    if (normalized <= 9) return '🔴' // 9 - Critical
-    return '🔴' // 10 - Extreme
+    if (normalized <= 1) return '#22c55e' // 1 - Very Low
+    if (normalized <= 2) return '#22c55e' // 2 - Low
+    if (normalized <= 3) return '#facc15' // 3 - Low-Medium
+    if (normalized <= 4) return '#facc15' // 4 - Medium-Low
+    if (normalized <= 5) return '#f97316' // 5 - Medium
+    if (normalized <= 6) return '#f97316' // 6 - Medium-High
+    if (normalized <= 7) return '#dc2626' // 7 - High
+    if (normalized <= 8) return '#dc2626' // 8 - Very High
+    if (normalized <= 9) return '#dc2626' // 9 - Critical
+    return '#7f1d1d' // 10 - Extreme
   }
 
   // Handle column sorting
@@ -98,13 +98,11 @@ export default function Home() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <div className="text-center space-y-4 px-4">
-          <div className="text-4xl mb-2">🇺🇸</div>
-          <div className="loading-indicator text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Loading NationVitals...</div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Preparing county-level health data</div>
+          <div className="loading-indicator text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Loading Health Data...</div>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Preparing county-level analysis</div>
           <div className="w-64 h-2 loading-bar">
             <div className="h-full" style={{ width: '70%', background: 'linear-gradient(90deg, var(--accent-blue), var(--accent-cyan))' }}></div>
           </div>
-          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>Optimized for faster loading ⚡</div>
         </div>
       </div>
     )
@@ -142,7 +140,7 @@ export default function Home() {
                 textDecoration: 'none'
               }}
             >
-              📖 About This Project
+              About This Project
             </a>
           </div>
         </div>
@@ -204,28 +202,28 @@ export default function Home() {
           <YearlyDualMap />
         </div>
 
-        {/* Emoji Legend */}
-        <div className="emoji-legend mb-6 mx-2 md:mx-0">
-          <h3 className="text-base md:text-lg font-semibold mb-3 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>📊 Severity Scale (Language-Free)</h3>
+        {/* Severity Scale Legend */}
+        <div className="mb-6 mx-2 md:mx-0">
+          <h3 className="text-base md:text-lg font-semibold mb-3 text-center md:text-left" style={{ color: 'var(--text-primary)' }}>Severity Scale</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3 text-xs md:text-sm">
-            <div className="emoji-legend-item flex items-center gap-2">
-              <span className="text-2xl">🟢</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded" style={{ background: '#22c55e' }}></div>
               <span style={{ color: 'var(--text-primary)' }}>1-2: Very Low</span>
             </div>
-            <div className="emoji-legend-item flex items-center gap-2">
-              <span className="text-2xl">🟡</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded" style={{ background: '#facc15' }}></div>
               <span style={{ color: 'var(--text-primary)' }}>3-4: Low-Med</span>
             </div>
-            <div className="emoji-legend-item flex items-center gap-2">
-              <span className="text-2xl">🟠</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded" style={{ background: '#f97316' }}></div>
               <span style={{ color: 'var(--text-primary)' }}>5-6: Medium</span>
             </div>
-            <div className="emoji-legend-item flex items-center gap-2">
-              <span className="text-2xl">🔴</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded" style={{ background: '#dc2626' }}></div>
               <span style={{ color: 'var(--text-primary)' }}>7-10: High</span>
             </div>
-            <div className="emoji-legend-item flex items-center gap-2">
-              <span className="text-2xl">⚪</span>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded" style={{ background: '#d1d5db' }}></div>
               <span style={{ color: 'var(--text-primary)' }}>No Data</span>
             </div>
           </div>
@@ -301,14 +299,14 @@ export default function Home() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {state.state_name || state.state_fips}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-3xl">
-                        {getEmojiRank(state.DrugDeaths, maxDrugDeaths)}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="w-8 h-8 rounded-full mx-auto" style={{ background: getSeverityColor(state.DrugDeaths, maxDrugDeaths) }}></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {state.DrugDeaths?.toFixed(1) || 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-3xl">
-                        {getEmojiRank(state.SuicideDeaths, maxSuicideDeaths)}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="w-8 h-8 rounded-full mx-auto" style={{ background: getSeverityColor(state.SuicideDeaths, maxSuicideDeaths) }}></div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {state.SuicideDeaths?.toFixed(1) || 'N/A'}

@@ -798,7 +798,7 @@ export default function YearlyDualMap() {
             border: 'none'
           }}
         >
-          📊 Compare Counties
+          Compare Counties
         </button>
       </div>
 
@@ -884,7 +884,7 @@ export default function YearlyDualMap() {
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold" style={{ color: '#1e40af' }}>
-                  📊 Compare Counties
+                  County Comparison
                 </h2>
                 <button
                   onClick={() => setCompareOpen(false)}
@@ -1048,7 +1048,7 @@ export default function YearlyDualMap() {
                   </div>
                   {(controlPoverty || controlIncome || controlUrbanRural) && (
                     <div className="mt-3 text-xs p-2 rounded" style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#1e40af' }}>
-                      ℹ️ Statistical adjustment uses regression to remove the effect of selected confounders
+                      Statistical adjustment uses regression to remove the effect of selected confounders
                     </div>
                   )}
                   {loadingAdjustment && (
@@ -1160,7 +1160,7 @@ export default function YearlyDualMap() {
                   {timeSeriesData && (
                     <div className="rounded-xl p-5" style={{ background: 'rgba(255,255,255,0.7)' }}>
                       <h3 className="text-lg font-bold mb-4" style={{ color: '#1e40af' }}>
-                        📈 Year-over-Year Trends (2018-2023)
+                        Year-over-Year Trends (2018-2023)
                       </h3>
 
                       {['DrugDeathRate', 'SuicideRate', 'UnemploymentRate'].map((metric) => {
@@ -1286,8 +1286,8 @@ export default function YearlyDualMap() {
                   {/* Model-Adjusted Comparison */}
                   {selectedCountyA && selectedCountyB && (
                     <div className="rounded-xl p-5" style={{ background: 'rgba(209, 250, 229, 0.3)', borderLeft: '4px solid #10b981' }}>
-                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: '#047857' }}>
-                        <span>📊</span> Model-Adjusted Comparison
+                      <h3 className="text-lg font-bold mb-4" style={{ color: '#047857' }}>
+                        Model-Adjusted Comparison
                       </h3>
 
                       <div className="space-y-3 text-sm" style={{ color: '#1e293b' }}>
@@ -1306,7 +1306,6 @@ export default function YearlyDualMap() {
 
               {!selectedCountyA && !selectedCountyB && (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">📍</div>
                   <p className="text-lg" style={{ color: '#64748b' }}>
                     Select two counties to compare
                   </p>
