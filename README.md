@@ -10,12 +10,20 @@ Interactive map visualization showing county-level correlations between politica
 - Search functionality to find specific counties
 - Interactive hover tooltips with detailed county statistics
 
-## Technologies
-
+## stack
 - Next.js 14
 - MapLibre GL
 - TypeScript
 - Tailwind CSS
+- Wolfram Language (geospatial analytics)
+- Python (data processing)
+
+## Data Processing
+
+This project uses a combination of Wolfram Language for geospatial analytics (interstate proximity calculations) and Python for data merging and statistical processing. Key scripts:
+
+- `merge_SES.py`: Merges socioeconomic data with health outcomes
+- `wolfram/`: Wolfram scripts for geospatial calculations
 
 ## Data Sources
 
